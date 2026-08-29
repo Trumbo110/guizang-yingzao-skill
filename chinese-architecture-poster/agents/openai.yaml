@@ -1,0 +1,7 @@
+interface:
+  display_name: "中国建筑旅行海报"
+  short_description: "将真实中国建筑旅行照片转为现代编辑海报，并生成原图对照拼图"
+  brand_color: "#AC3C33"
+  default_prompt: "Use $chinese-architecture-poster to turn my real Chinese architecture photo into a truthful editorial travel poster."
+policy:
+  allow_implicit_invocation: true

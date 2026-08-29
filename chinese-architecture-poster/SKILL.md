@@ -7,6 +7,18 @@ description: Transform user-shot photos of Chinese historic, vernacular, reconst
 
 把用户拍摄的真实建筑作为不可替换的主体，通过信息提纯、印刷化处理和编辑排版生成旅行海报。风格化不能改变建筑身份，也不能把当代仿古、修复或新建项目误写成历史遗存。
 
+## 决策优先级
+
+按以下顺序解决问题；后一层不能破坏前一层：
+
+1. **排版与空间关系**：网格、文字尺度、留白、建筑占位和遮挡先成立。
+2. **建筑身份**：真实轮廓、层数、屋顶、视角和地点特征必须保留。
+3. **图像转译**：建筑、天空、前景和环境分别获得可见的限色与材质处理。
+4. **事实语境**：经核实的年代、地点、门名或构件词进入字体系统。
+5. **装饰**：只有同时服务主题和构图时才保留；孤立、无来源或仅为填空的元素删除。
+
+这是一张编辑海报，不是网页、导览牌或构件科普图。默认先把事实变成排版材料，再考虑是否需要解释。
+
 ## 三阶段模板化工作流
 
 模板不是固定画框，而是一组可以追溯来源、具有兼容条件的设计变量。不要先选择一个风格名再套效果。
@@ -41,8 +53,8 @@ description: Transform user-shot photos of Chinese historic, vernacular, reconst
 - 对复建、迁建和修复项目同时写清“历史源流”与“现存状态”，不能让 `始建于明代` 被理解为现存木构就是明代原构。
 - 找不到可靠信息时只写已确认的名称、地点和中性描述，不补写“始建于”“千年古建”等猜测。
 - 对当代中国风项目使用“当代院落”“城市更新”“传统语汇”等准确措辞，不制造古迹感。
-- 从事实卡选择 4–7 个信息单元：名称、地点、时间关系、形制/构件、可见题字或城市关系。每个构件标签必须指向照片中的真实对象，并为引线预留不穿字的路由。
-- 默认采用“主题文字模式”：把经核实的年代、门名、构件词和地点词作为字形、节奏、背景结构或反白文字，不解释“它是什么”。只有用户明确要求建筑科普、构件解析或导览图时，才启用带编号和引线的“解释注释模式”。
+- 从事实卡选择 3–7 个信息单元：名称、地点、时间关系、形制/构件、可见题字或城市关系。信息数量服从版面，不为凑满而加字。
+- 默认采用“主题文字模式”：把经核实的年代、门名、构件词和地点词作为字形、节奏、背景结构或反白文字，不解释“它是什么”，也不画指向线。只有用户明确要求建筑科普、构件解析或导览图时，才启用“解释注释模式”；此时构件标签必须指向照片中的真实对象，并为引线预留不穿字的路由。
 
 ## 提炼建筑
 
@@ -67,7 +79,7 @@ description: Transform user-shot photos of Chinese historic, vernacular, reconst
 4. 从背景到前景的 z 轴层级表。
 5. 文字与建筑的遮挡对象、方向、比例和不可遮挡区。
 6. 背景、色块、建筑、线稿和水面之间的明度、色相与纹理差异。
-7. 事实注释表：标签来源、文字框栏位、目标构件、引线路由、终点和禁穿区。
+7. 信息模式：默认填写主题词的字体角色、栏位和层级；只有“解释注释模式”才填写标签来源、目标构件、引线路由、终点和禁穿区。
 
 蓝图不能只写“六栏网格”“标题与建筑重叠”这类抽象要求，必须指出元素跨第几栏、在哪条轴线上相遇、谁遮住谁，以及遮挡多少。
 
@@ -84,17 +96,18 @@ description: Transform user-shot photos of Chinese historic, vernacular, reconst
 - 用户要求“不画线”时，版式中不得出现分割线、规则线、边框、引线、下划线或用线模拟的装饰；层级完全依靠字级、字重、颜色、留白、栏位与遮挡建立。
 - 每一处重叠必须写成“参与元素、共同轴线、z 顺序、重叠范围、视觉目的、保护区”的重叠契约；只有靠得很近或随机压住不算空间设计。
 - 海报不是网页：默认禁止把构件注释做成一组重复的卡片、徽章、按钮、圆角容器或带投影的信息组件。资料应先成为同一字体场中的边栏、窄列、反白小字或无底色注释；只有局部对比无法解决时才允许一个无投影的扁平色条。
-- 默认采用两个中性色加一个强调色，强调色主要用于标题、圆形、印章或分割线。
+- 默认采用两个中性色加一个强调色；优先从建筑原生色、地域材料或拍摄光线中取色，并让强调色连接至少两类元素。不要默认添加红圆、印章、短线或其他“东方海报”符号。
+- 默认的“主题文字模式”不使用可见规则线、边框、引线、下划线、箭头或标注端点。网格只存在于设计和检查阶段；只有用户明确要求信息图、测绘感或构件解析时，功能线才可进入成图。
 - 图片内只放必要短文案。复杂文字系统不要只靠提示词描述位置；先读取 [references/frontend-layout-guide.md](references/frontend-layout-guide.md)，用真实字体和网格制作排版垫图，再让图像模型整体重绘。
 
 ## 排版垫图优先
 
 当画面包含结构性大字、两种以上字体角色、竖排文字、跨栏或文字—建筑遮挡时，默认先做前端排版垫图：
 
-1. 先选垫图模式。需要明显限色、版画、线刻、背景替换等强风格化时，默认制作不含原图像素的 `layout-only` 垫图：用中性几何占位标出建筑范围和主导轴。只有目标是轻度调色、保留摄影质感时，才使用把原图放在底层的 `photo-overlay` 垫图。
-2. 在 HTML/CSS、SVG 或 Canvas 中使用真实字体、真实文案和 4/6/12 栏网格排出近似成品；文字边界框、换行、字距、共享边线、规则线端点和遮挡位置必须可见。
-3. 为所有文字建立禁穿区；功能线、引线和装饰线只能在专用沟槽、留白通道或文字块之间运行。用 `grid-check` 检查，不接受“视觉上差不多”的随机起止。
-4. 导出两张图：带栏线的 `grid-check` 仅供人工检查；关闭栏线的 `layout-guide` 才作为模型输入。功能规则线可以保留，网格栏线不能成为装饰。
+1. 默认制作不含原图像素的 `layout-only` 垫图：用中性几何占位标出建筑范围、主导轴和遮挡边界。只有用户明确要求摄影封面、轻度调色或最大限度保留原始照片质感时，才使用把原图放在底层的 `photo-overlay` 垫图。
+2. 在 HTML/CSS、SVG 或 Canvas 中使用真实字体、真实文案和 4/6/12 栏网格排出近似成品；文字边界框、换行、字距、共享边线和遮挡位置必须可检查。解释注释模式还要显示功能线端点。
+3. 为所有文字建立禁穿区。主题文字模式不绘制线；解释注释模式的功能线和引线只能在专用沟槽、留白通道或文字块之间运行。用 `grid-check` 检查，不接受“视觉上差不多”的随机起止。
+4. 导出两张图：带栏线的 `grid-check` 仅供人工检查；关闭栏线的 `layout-guide` 才作为模型输入。主题文字模式同时关闭所有功能线；解释注释模式只保留蓝图明确需要的功能线。网格栏线永远不能成为装饰。
 5. 将原照片标为 Image 1 `edit target`，将垫图标为 Image 2 `composition/layout reference`。明确 Image 2 只控制占位和排版，不提供建筑像素；要求模型从 Image 1 重新提取并处理建筑。
 6. 垫图不能替代材质方案。提示词必须另外写清建筑抠取范围、明度阶数、各区域网点/平涂/线刻、套色偏移和背景替换；需要强风格化时明确禁止“原图抠出后只加纸纹”。
 7. 不在生成结果上默认重新堆叠文字。这里接受少量字形与像素级漂移，以换取文字和建筑共享同一种纸张、网点、套色和遮挡语言。
@@ -107,7 +120,9 @@ Asset type: editorial travel poster
 Input images: Image 1: edit target and sole source of architectural geometry; Image 2: optional frontend-rendered composition/layout reference
 Primary request: transform the real photo into <mode> while preserving the photographed building
 Subject: <confirmed building and location>
+Information mode: thematic typography by default / explanatory annotation only when explicitly requested
 Grid: <columns, margins, gutters, baseline, subject spans, text spans, controlled break>
+Alignment groups: <elements sharing each left edge, right edge, center axis, or baseline>
 Layer stack back-to-front: <paper> -> <ghost type/shape> -> <architecture plate> -> <foreground title/labels>
 Occlusion map: <element A hides B by x%; C sits over D; protected areas>
 Typography roles: <display Chinese, structural Latin, metadata sans, exact spans and scale>
@@ -115,9 +130,10 @@ Material map: <paper grain, flat color plane, architecture halftone/linework, sm
 Architecture transformation: <cutout scope, 2–4 value bands, region-by-region posterization, halftone, engraving, misregistration>
 Background transformation: <replace/retain; color field, texture frequency, gradient or flatness>
 Color separation: <background, subject ink, midtone, accent; boundary contrast>
+Line policy: none in thematic typography mode; otherwise list each functional line and its endpoints
 Text (verbatim): "<confirmed copy only>"
 Constraints: preserve geometry, viewpoint, proportions, rooflines, materials, and distinctive details; no invented architectural elements; exact text only; no logo; no watermark
-Avoid: top-text/bottom-photo template, disconnected title zone, unchanged photographic cutout, uniform grain on every layer, decorative grid lines with no alignment function, fake antiquity, illegible microtext
+Avoid: top-text/bottom-photo template, disconnected title zone, unchanged photographic cutout, uniform grain on every layer, visible grid lines in thematic mode, decorative lines, web UI cards, fake antiquity, illegible microtext, orphan decorations
 ```
 
 ## 验收
@@ -132,10 +148,13 @@ Avoid: top-text/bottom-photo template, disconnected title zone, unchanged photog
 - 标题和建筑主轮廓在缩略图尺寸下仍清晰，正文不过度细小。
 - 能明确指出至少三个 z 轴层级、两种不同材质和两处受控遮挡；若文字与图片仍是上下分区，判为未通过。
 - 网格的栏线能解释主要元素的起止位置，强调色至少连接两个不同类别的元素，而不是孤立装饰。
-- 任意规则线或引线都不穿过可读文字；注释线的起点、折点和终点均可解释，且目标构件唯一。
+- 解释注释模式中的任意规则线或引线都不穿过可读文字；注释线的起点、折点和终点均可解释，且目标构件唯一。
 - 每一处文字—文字或文字—建筑重叠都能说出共同轴线、前后顺序和视觉任务；说不出来的重叠必须删除。
 - 页面中没有成组重复的卡片、按钮式年份、投影标签或仪表盘式编号；若去掉容器后层级就消失，说明字体、尺度和网格尚未设计完成。
-- 使用垫图时，将结果与 `layout-guide` 并排检查：共享边线、文字块尺度、换行、规则线端点和遮挡方向应基本保持；不要求像素级重合，但不能重新漂成互不相关的位置。
+- 主题文字模式中没有可见线、构件指向、编号式科普或定义句；事实短词已经成为尺度、色彩、反白、节奏或遮挡的一部分。
+- 建筑、天空、环境与前景都按材质图发生可见变化；若只有建筑被抠出而天空和背景仍近似原照片，判为未完成。
+- 所有附加装饰图形都能同时说明主题来源和构图任务；无法连接至少两个元素、孤立在角落或只是填空的装饰必须删除。
+- 使用垫图时，将结果与 `layout-guide` 并排检查：共享边线、文字块尺度、换行和遮挡方向应基本保持；解释注释模式再检查功能线端点。不要求像素级重合，但不能重新漂成互不相关的位置。
 
 若第一次结果只有局部对齐问题，优先修改垫图中的对应边界框、字号或裁切关系，再整体重绘；不要在结果上不断追加补丁文字。每轮只修一个变量并重复建筑不变量，避免主体漂移。
 

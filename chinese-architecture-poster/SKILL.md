@@ -7,17 +7,30 @@ description: Transform user-shot photos of Chinese historic, vernacular, reconst
 
 把用户拍摄的真实建筑作为不可替换的主体，通过信息提纯、印刷化处理和编辑排版生成旅行海报。风格化不能改变建筑身份，也不能把当代仿古、修复或新建项目误写成历史遗存。
 
-## 先判断任务
+## 三阶段模板化工作流
 
-- 将用户照片标记为 **edit target**；其他样图只能作为风格参考，不能把其中的建筑、文字、标志或文化符号移入目标照片。
+模板不是固定画框，而是一组可以追溯来源、具有兼容条件的设计变量。不要先选择一个风格名再套效果。
+
+### 1. 分析并抽离要素
+
+- 将用户照片标记为 **edit target**；其他样图只能作为参考，不能把其中的建筑、文字、标志或文化符号直接移入目标照片。
+- 读取 [references/design-element-library.md](references/design-element-library.md)，逐项分析内容、字体角色、网格、建筑类型与占位、背景、颜色、图形、材质、遮挡和信息密度。
+- 使用内置参考组时读取 [references/reference-encoding-matrix.md](references/reference-encoding-matrix.md)。新参考图也按相同字段编码；把“观察到什么”“为何有效”“可借用什么”“何时不适用”分开。
+- 先穷举候选要素，再删减。每个要素都要说明视觉任务；没有任务的装饰不进入候选集。
+
+### 2. 推断建筑处理
+
 - 判断对象属于历史建筑、传统民居、历史街区、修复/重建项目，还是中国风当代建筑。仅凭外观不能断言年代或文保身份。
-- 用户明确指定风格时遵从；未指定时按建筑语境选择：
-  - 历史建筑或文保对象：`museum-print`。
-  - 结构、营造或测绘感强：`survey-overlay`。
-  - 当代院落、酒店、更新项目或街区：`editorial-grid`。
-  - 社交媒体封面、强调冲击力：`screenprint-pop`。
-  - 蓝紫夜游风只在用户明确要求或对象具有夜生活/商业语境时使用。
-- 选择风格或构造提示词前，读取 [references/visual-style-analysis.md](references/visual-style-analysis.md)。
+- 分析目标照片的建筑类型、视角、主体占比、中轴/透视线、负空间、背景杂乱度、可辨识构件、原生颜色和可分材质区域。
+- 依据这些条件决定抠整座建筑、屋顶线、立面、局部构件、街巷透视或多块碎片；不能因为某张参考图用了完整抠图就默认抠完整主体。
+- 读取 [references/mixing-logic.md](references/mixing-logic.md)，为抠图范围、主材质、辅助材质、背景类型和特效写出因果理由。
+
+### 3. 有逻辑地混搭
+
+- 从候选集中选择一个基础构图、一个建筑提取策略、一个主材质、最多一个辅助材质、一套字体角色系统、一套颜色逻辑、一个主要空间冲突和可选的语境插入层。
+- 允许从不同参考图取要素，但每项都要记录来源机制、与当前照片的兼容理由，以及它与其他已选要素的关系。
+- 混搭不是取平均。先建立一个主导机制，再用 1–2 个次要机制补足；不要让中心纪念碑、强对角线、密集拼贴等多个基础构图同时竞争。
+- 填写 [references/composition-blueprint.md](references/composition-blueprint.md)，通过兼容性和失败检查后才能生成。
 
 ## 建立事实边界
 
@@ -37,21 +50,42 @@ description: Transform user-shot photos of Chinese historic, vernacular, reconst
 
 先做适度透视和构图校正，再分离主体、压低干扰背景。只在关键结构处描边；树叶、电线、游客和随机纹理不应获得与建筑同等权重。
 
-## 生成海报
+## 先写构图蓝图，再生成海报
 
 默认使用图像编辑而非重新生成场景。把建筑几何、相机视角、真实材料、光影逻辑和可辨识细节写成不变量，并明确：不得增加楼层、塔刹、脊兽、匾额、门窗或不存在的装饰。
+
+在调用图像工具之前，先用 [references/composition-blueprint.md](references/composition-blueprint.md) 写出本次海报的：
+
+1. 画布、栏数、边距、沟槽和基线。
+2. 文案清单及每段文字的字体角色、尺度、跨栏和前后层级。
+3. 建筑的抠图边界、保留特征及各区域的材质处理。
+4. 从背景到前景的 z 轴层级表。
+5. 文字与建筑的遮挡对象、方向、比例和不可遮挡区。
+6. 背景、色块、建筑、线稿和水面之间的明度、色相与纹理差异。
+
+蓝图不能只写“六栏网格”“标题与建筑重叠”这类抽象要求，必须指出元素跨第几栏、在哪条轴线上相遇、谁遮住谁，以及遮挡多少。
 
 版式遵循以下约束：
 
 - 默认保持原图方向；旅行竖版优先 3:4，横版优先 4:3 或 16:9，除非用户指定平台比例。
-- 使用 4 栏或 6 栏网格，复杂多图版可用 12 栏；外边距约为画布宽度的 5%–8%。
-- 建立地点/建筑名、说明、副资料三级层级；最多两套正式字体和一套仅作点缀的书写体。
-- 文字可以与建筑重叠，但避开塔刹、屋脊、牌匾、入口和决定身份的构件。
+- 使用 4 栏或 6 栏网格，复杂多图版可用 12 栏；外边距约为画布宽度的 5%–8%，沟槽约为 1.2%–2%。至少 70% 的元素服从网格，只允许 1–2 个有目的的破格点。
+- 建立展示标题、结构性大字、地点标签、资料文字等不同角色。字体差异必须对应角色差异，不能只是换字体；最多两套正式字体和一套仅作点缀的书写体。
+- 至少建立三个可辨认的空间层：背景纸/结构字或色块、建筑主体、前景标题或资料标签。禁止默认采用“上半部纯文字、下半部完整矩形照片”的两段式模板。
+- 至少设计两处受控遮挡：一处让建筑遮住低对比结构字，另一处让短标题或标签压在建筑上。避开塔刹、主屋脊、牌匾、入口和决定身份的构件。
+- 建筑与背景不能共享同一种材质。纸张使用低频纤维，建筑使用高频网点/线刻/实景颗粒，几何色块保持相对平滑；水、玻璃等反光面可保留平滑照片质感作为材质对照。
 - 英文只能承载真实信息，不能用无意义字母制造“设计感”。
 - 默认采用两个中性色加一个强调色，强调色主要用于标题、圆形、印章或分割线。
 - 图片内只放必要短文案。要求逐字准确；若图像模型不能稳定渲染中文，先生成无字视觉底图，再用确定性排版工具叠字。
 
-推荐的共享提示词结构：
+## 分层制作
+
+对排版精度要求高时，不让一个提示词同时承担抠图、材质、排字和事实表达：
+
+1. **建筑材质层**：从原图生成或提取可复用的实景双色层、网点层、线稿层或透明抠图，不放文字。
+2. **构图合成层**：依据蓝图组合背景纸、结构色块、背景大字、建筑材质层和前景文字。
+3. **确定性文字层**：需要严格字体、字距和中文准确性时，使用 SVG、HTML/CSS、Canvas、Pillow 或图形软件叠字并栅格化；图像模型只负责视觉材质。
+
+若直接用图像模型完成合成，提示词必须显式给出层级栈、跨栏区域和遮挡比例：
 
 ```text
 Use case: style-transfer
@@ -59,12 +93,15 @@ Asset type: editorial travel poster
 Input images: Image 1: edit target and sole source of architectural geometry
 Primary request: transform the real photo into <mode> while preserving the photographed building
 Subject: <confirmed building and location>
-Style/medium: high-contrast editorial print, selective linework, restrained print texture
-Composition/framing: <grid, crop, title zone, negative space>
-Color palette: <two neutrals plus one accent>
-Text (verbatim): "<short confirmed title/location>"
+Grid: <columns, margins, gutters, baseline, subject spans, text spans, controlled break>
+Layer stack back-to-front: <paper> -> <ghost type/shape> -> <architecture plate> -> <foreground title/labels>
+Occlusion map: <element A hides B by x%; C sits over D; protected areas>
+Typography roles: <display Chinese, structural Latin, metadata sans, exact spans and scale>
+Material map: <paper grain, flat color plane, architecture halftone/linework, smooth reflective region>
+Color separation: <background, subject ink, midtone, accent; boundary contrast>
+Text (verbatim): "<confirmed copy only>"
 Constraints: preserve geometry, viewpoint, proportions, rooflines, materials, and distinctive details; no invented architectural elements; exact text only; no logo; no watermark
-Avoid: fake antiquity, fantasy reconstruction, generic Japanese motifs, illegible microtext, decorative clutter
+Avoid: top-text/bottom-photo template, disconnected title zone, uniform grain on every layer, decorative grid lines with no alignment function, fake antiquity, illegible microtext
 ```
 
 ## 验收
@@ -76,6 +113,8 @@ Avoid: fake antiquity, fantasy reconstruction, generic Japanese motifs, illegibl
 - 中文标题逐字正确，没有多余英文、伪二维码、品牌标识或水印。
 - 颗粒、网点和描边服务于结构，不把树木或背景噪声变成主体。
 - 标题和建筑主轮廓在缩略图尺寸下仍清晰，正文不过度细小。
+- 能明确指出至少三个 z 轴层级、两种不同材质和两处受控遮挡；若文字与图片仍是上下分区，判为未通过。
+- 网格的栏线能解释主要元素的起止位置，强调色至少连接两个不同类别的元素，而不是孤立装饰。
 
 若第一次结果仅有局部问题，每轮只修一个变量并重复建筑不变量，避免重写整套提示词造成主体漂移。
 

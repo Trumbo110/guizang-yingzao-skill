@@ -81,10 +81,12 @@ description: Transform user-shot photos of Chinese historic, vernacular, reconst
 
 当画面包含结构性大字、两种以上字体角色、竖排文字、跨栏或文字—建筑遮挡时，默认先做前端排版垫图：
 
-1. 在 HTML/CSS、SVG 或 Canvas 中载入原照片，使用真实字体、真实文案和 4/6/12 栏网格排出近似成品；文字边界框、换行、字距、共享边线、规则线端点和遮挡位置必须可见。
-2. 导出两张图：带栏线的 `grid-check` 仅供人工检查；关闭栏线的 `layout-guide` 才作为模型输入。功能规则线可以保留，网格栏线不能成为装饰。
-3. 将原照片标为 Image 1 `edit target`，将垫图标为 Image 2 `composition/layout reference`。要求模型继承垫图的空间关系并整体重绘文字、建筑和印刷材质。
-4. 不在生成结果上默认重新堆叠文字。这里接受少量字形与像素级漂移，以换取文字和建筑共享同一种纸张、网点、套色和遮挡语言。
+1. 先选垫图模式。需要明显限色、版画、线刻、背景替换等强风格化时，默认制作不含原图像素的 `layout-only` 垫图：用中性几何占位标出建筑范围和主导轴。只有目标是轻度调色、保留摄影质感时，才使用把原图放在底层的 `photo-overlay` 垫图。
+2. 在 HTML/CSS、SVG 或 Canvas 中使用真实字体、真实文案和 4/6/12 栏网格排出近似成品；文字边界框、换行、字距、共享边线、规则线端点和遮挡位置必须可见。
+3. 导出两张图：带栏线的 `grid-check` 仅供人工检查；关闭栏线的 `layout-guide` 才作为模型输入。功能规则线可以保留，网格栏线不能成为装饰。
+4. 将原照片标为 Image 1 `edit target`，将垫图标为 Image 2 `composition/layout reference`。明确 Image 2 只控制占位和排版，不提供建筑像素；要求模型从 Image 1 重新提取并处理建筑。
+5. 垫图不能替代材质方案。提示词必须另外写清建筑抠取范围、明度阶数、各区域网点/平涂/线刻、套色偏移和背景替换；需要强风格化时明确禁止“原图抠出后只加纸纹”。
+6. 不在生成结果上默认重新堆叠文字。这里接受少量字形与像素级漂移，以换取文字和建筑共享同一种纸张、网点、套色和遮挡语言。
 
 只有文字很少、没有复杂对齐或用户明确要快速草图时，才跳过垫图。无论是否使用垫图，提示词都要显式给出层级栈、跨栏区域和遮挡比例：
 
@@ -99,10 +101,12 @@ Layer stack back-to-front: <paper> -> <ghost type/shape> -> <architecture plate>
 Occlusion map: <element A hides B by x%; C sits over D; protected areas>
 Typography roles: <display Chinese, structural Latin, metadata sans, exact spans and scale>
 Material map: <paper grain, flat color plane, architecture halftone/linework, smooth reflective region>
+Architecture transformation: <cutout scope, 2–4 value bands, region-by-region posterization, halftone, engraving, misregistration>
+Background transformation: <replace/retain; color field, texture frequency, gradient or flatness>
 Color separation: <background, subject ink, midtone, accent; boundary contrast>
 Text (verbatim): "<confirmed copy only>"
 Constraints: preserve geometry, viewpoint, proportions, rooflines, materials, and distinctive details; no invented architectural elements; exact text only; no logo; no watermark
-Avoid: top-text/bottom-photo template, disconnected title zone, uniform grain on every layer, decorative grid lines with no alignment function, fake antiquity, illegible microtext
+Avoid: top-text/bottom-photo template, disconnected title zone, unchanged photographic cutout, uniform grain on every layer, decorative grid lines with no alignment function, fake antiquity, illegible microtext
 ```
 
 ## 验收
@@ -113,6 +117,7 @@ Avoid: top-text/bottom-photo template, disconnected title zone, uniform grain on
 - 历史与地点文案均有依据；当代项目没有被误称为古建。
 - 中文标题逐字正确，没有多余英文、伪二维码、品牌标识或水印。
 - 颗粒、网点和描边服务于结构，不把树木或背景噪声变成主体。
+- 当蓝图要求强风格化时，建筑内部已经发生可见的限色、明度压缩和区域材质变化，天空/背景也按方案重建；若仍像原照片抠图加统一颗粒，判为未通过。
 - 标题和建筑主轮廓在缩略图尺寸下仍清晰，正文不过度细小。
 - 能明确指出至少三个 z 轴层级、两种不同材质和两处受控遮挡；若文字与图片仍是上下分区，判为未通过。
 - 网格的栏线能解释主要元素的起止位置，强调色至少连接两个不同类别的元素，而不是孤立装饰。

@@ -13,6 +13,20 @@
 
 模型仍会重新绘制字形，所以可能出现几个像素的漂移、字宽变化或局部笔画差异。该流程的目标是“版式明显守规矩且材质统一”，不是印刷制版级还原。
 
+## 选择垫图模式
+
+### `layout-only`：强风格化默认
+
+垫图不包含任何原照片像素。使用中性灰色多边形、矩形或简单剪影标出建筑占位、主导轴、屋檐方向和遮挡边界。适用于限色、版画、网点、线刻、拼贴或完全替换天空。
+
+这样能把“布局控制”和“图像处理”解耦：Image 2 不能诱导模型保守复制原照片，建筑材质只能由 Image 1 和提示词重新推断。
+
+### `photo-overlay`：摄影保留模式
+
+把原照片作为垫图底层，只在其上排字。适用于轻度调色、摄影封面、保持自然天空与材料细节。它能更准确地预演文字—建筑接触位置，但容易让模型把垫图当成半成品，从而降低风格化幅度。
+
+不要在需要明显艺术转译时使用 `photo-overlay`。
+
 ## 字体来源
 
 优先级：
@@ -28,7 +42,7 @@
 
 1. 画布先匹配最终比例和预期输出尺寸。
 2. 建立 4、6 或 12 栏 CSS Grid，并定义外边距、沟槽和基线变量。
-3. 将原照片作为底层，先固定建筑裁切与负空间，再放文字。
+3. 强风格化任务使用 `layout-only`：以中性占位形状标出建筑范围和主导线，不嵌入原图；摄影保留任务才把原图作为底层。
 4. 使用最终真实文案和字体，设置展示标题、结构性大字、地点标签和资料文字。
 5. 用 `clip-path`、蒙版或明确的 z-index 近似建筑遮字；不要为了精细抠图而牺牲排版决策速度。
 6. 导出：
@@ -43,16 +57,30 @@
 
 ```text
 Image 1: edit target and sole source of architectural geometry.
-Image 2: frontend-rendered composition/layout reference; defines text bounding boxes, shared alignments, line breaks, negative space, rule endpoints, and occlusion direction.
+Image 2: frontend-rendered layout-only reference; contains no target-photo pixels and defines only text bounding boxes, shared alignments, line breaks, neutral subject footprint, negative space, rule endpoints, and occlusion direction.
 ```
 
 提示模型“整体重绘”而不是“粘贴数字文字”，并明确：
 
 - Image 2 的空间关系优先于纯文字描述；
+- Image 2 的中性建筑占位不是材质参考，必须用 Image 1 的真实结构替换；
 - 继承大致字体类别、字号比例、边界框和共同轴线；
 - 文字、建筑、纸张和网点要共享同一印刷语言；
 - 允许自然字形变化，但不得增加文案；
 - 原照片仍是建筑几何、匾额、装饰和视角的唯一来源。
+
+## 单独约束建筑与背景
+
+排版垫图只解决“放在哪里”，不能解决“处理成什么”。提示词还要明确：
+
+- 抠取整座、屋顶线、局部构件或连续街巷；
+- 压缩成 2–4 个明度阶中的哪几阶；
+- 屋顶、墙体、斗拱、树木、水面等区域分别使用网点、平涂、线刻、实景或剪影；
+- 是否增加套色偏移、阴影回声、描边或局部保留原色；
+- 原天空是保留、压低还是完全替换；新背景使用什么色场、纹理频率和明度；
+- 明确禁止 `unchanged photo pasted onto a new background`、`raw photographic cutout` 和 `one uniform grain layer`。
+
+如果只写“做成复古海报”，模型很容易选择最保守的原图抠图；必须把区域性材质变化写成可检查的动作。
 
 不要把可见的栏线图作为生成输入，否则模型容易把网格线当成海报装饰。
 
@@ -63,6 +91,7 @@ Image 2: frontend-rendered composition/layout reference; defines text bounding b
 - 主要共享边线的偏差最好不超过画布宽度约 1%–2%；
 - 文字块的宽高、换行和方向没有发生结构性改变；
 - 建筑仍占据相同主要区域，负空间没有被随机填满；
+- 强风格化任务中，建筑内部和天空已经按材质方案发生可见变化，而不是原图加颗粒；
 - 遮挡方向保持一致，身份保护区没有被文字覆盖；
 - 文案基本正确且没有额外乱码、微型资料、标志或水印。
 

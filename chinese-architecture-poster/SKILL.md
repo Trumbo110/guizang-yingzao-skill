@@ -75,22 +75,23 @@ description: Transform user-shot photos of Chinese historic, vernacular, reconst
 - 建筑与背景不能共享同一种材质。纸张使用低频纤维，建筑使用高频网点/线刻/实景颗粒，几何色块保持相对平滑；水、玻璃等反光面可保留平滑照片质感作为材质对照。
 - 英文只能承载真实信息，不能用无意义字母制造“设计感”。
 - 默认采用两个中性色加一个强调色，强调色主要用于标题、圆形、印章或分割线。
-- 图片内只放必要短文案。要求逐字准确；若图像模型不能稳定渲染中文，先生成无字视觉底图，再用确定性排版工具叠字。
+- 图片内只放必要短文案。复杂文字系统不要只靠提示词描述位置；先读取 [references/frontend-layout-guide.md](references/frontend-layout-guide.md)，用真实字体和网格制作排版垫图，再让图像模型整体重绘。
 
-## 分层制作
+## 排版垫图优先
 
-对排版精度要求高时，不让一个提示词同时承担抠图、材质、排字和事实表达：
+当画面包含结构性大字、两种以上字体角色、竖排文字、跨栏或文字—建筑遮挡时，默认先做前端排版垫图：
 
-1. **建筑材质层**：从原图生成或提取可复用的实景双色层、网点层、线稿层或透明抠图，不放文字。
-2. **构图合成层**：依据蓝图组合背景纸、结构色块、背景大字、建筑材质层和前景文字。
-3. **确定性文字层**：需要严格字体、字距和中文准确性时，使用 SVG、HTML/CSS、Canvas、Pillow 或图形软件叠字并栅格化；图像模型只负责视觉材质。
+1. 在 HTML/CSS、SVG 或 Canvas 中载入原照片，使用真实字体、真实文案和 4/6/12 栏网格排出近似成品；文字边界框、换行、字距、共享边线、规则线端点和遮挡位置必须可见。
+2. 导出两张图：带栏线的 `grid-check` 仅供人工检查；关闭栏线的 `layout-guide` 才作为模型输入。功能规则线可以保留，网格栏线不能成为装饰。
+3. 将原照片标为 Image 1 `edit target`，将垫图标为 Image 2 `composition/layout reference`。要求模型继承垫图的空间关系并整体重绘文字、建筑和印刷材质。
+4. 不在生成结果上默认重新堆叠文字。这里接受少量字形与像素级漂移，以换取文字和建筑共享同一种纸张、网点、套色和遮挡语言。
 
-若直接用图像模型完成合成，提示词必须显式给出层级栈、跨栏区域和遮挡比例：
+只有文字很少、没有复杂对齐或用户明确要快速草图时，才跳过垫图。无论是否使用垫图，提示词都要显式给出层级栈、跨栏区域和遮挡比例：
 
 ```text
 Use case: style-transfer
 Asset type: editorial travel poster
-Input images: Image 1: edit target and sole source of architectural geometry
+Input images: Image 1: edit target and sole source of architectural geometry; Image 2: optional frontend-rendered composition/layout reference
 Primary request: transform the real photo into <mode> while preserving the photographed building
 Subject: <confirmed building and location>
 Grid: <columns, margins, gutters, baseline, subject spans, text spans, controlled break>
@@ -115,8 +116,9 @@ Avoid: top-text/bottom-photo template, disconnected title zone, uniform grain on
 - 标题和建筑主轮廓在缩略图尺寸下仍清晰，正文不过度细小。
 - 能明确指出至少三个 z 轴层级、两种不同材质和两处受控遮挡；若文字与图片仍是上下分区，判为未通过。
 - 网格的栏线能解释主要元素的起止位置，强调色至少连接两个不同类别的元素，而不是孤立装饰。
+- 使用垫图时，将结果与 `layout-guide` 并排检查：共享边线、文字块尺度、换行、规则线端点和遮挡方向应基本保持；不要求像素级重合，但不能重新漂成互不相关的位置。
 
-若第一次结果仅有局部问题，每轮只修一个变量并重复建筑不变量，避免重写整套提示词造成主体漂移。
+若第一次结果只有局部对齐问题，优先修改垫图中的对应边界框、字号或裁切关系，再整体重绘；不要在结果上不断追加补丁文字。每轮只修一个变量并重复建筑不变量，避免主体漂移。
 
 ## 生成后询问拼图
 

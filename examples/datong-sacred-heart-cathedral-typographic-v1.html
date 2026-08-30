@@ -349,6 +349,50 @@
     .grid::after { right: var(--margin); }
 
     body.show-grid .grid { display: block; }
+
+    /* V2 palette: intentionally leaves the photographed black sky behind. */
+    body.palette-oxide { background: #ad563e; }
+
+    body.palette-oxide .poster {
+      --stone: #e6d8ba;
+      --stone-light: #f2ead5;
+      --stone-dark: #547274;
+      --tree: #18312d;
+      --ink: #0d2223;
+      background:
+        radial-gradient(circle at 72% 30%, rgba(239,190,130,.25), transparent 34%),
+        radial-gradient(circle at 20% 72%, rgba(116,44,39,.20), transparent 42%),
+        #b75b3f;
+    }
+
+    body.palette-oxide .poster::after {
+      opacity: .30;
+      background-image:
+        radial-gradient(circle, rgba(246,225,190,.42) 0 1px, transparent 1.3px),
+        radial-gradient(circle, rgba(76,26,25,.50) 0 1px, transparent 1.2px);
+      background-size: 8px 8px, 13px 13px;
+      mix-blend-mode: multiply;
+    }
+
+    body.palette-oxide .year,
+    body.palette-oxide .main-title {
+      color: #112b2c;
+    }
+
+    body.palette-oxide .terms-en { color: #df955e; }
+
+    body.palette-oxide .main-title {
+      text-shadow: 9px 8px 0 rgba(242,234,213,.24);
+    }
+
+    body.palette-oxide .latin { color: rgba(17,43,44,.19); }
+    body.palette-oxide .latin .heart { color: rgba(17,43,44,.27); }
+    body.palette-oxide .latin .cathedral { color: rgba(242,234,213,.34); }
+    body.palette-oxide .tower .cross-v,
+    body.palette-oxide .tower .cross-h { background: var(--stone-light); }
+    body.palette-oxide .tree-glow {
+      background: radial-gradient(ellipse at 45% 70%, rgba(236,177,91,.72), transparent 56%);
+    }
   </style>
 </head>
 <body>
@@ -391,6 +435,7 @@
   <script>
     const params = new URLSearchParams(location.search);
     if (params.get('grid') === '1') document.body.classList.add('show-grid');
+    if (params.get('palette') === 'oxide') document.body.classList.add('palette-oxide');
     document.fonts.ready.then(() => { document.body.dataset.fontsReady = 'true'; });
   </script>
 </body>

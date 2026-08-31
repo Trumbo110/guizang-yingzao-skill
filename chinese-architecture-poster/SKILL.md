@@ -19,6 +19,25 @@ description: Transform user-shot photos of Chinese historic, vernacular, reconst
 
 这是一张编辑海报，不是网页、导览牌或构件科普图。默认先把事实变成排版材料，再考虑是否需要解释。
 
+## 生成前先确认三件事
+
+在检索、选 Token、写蓝图或调用图像生成之前，先从用户消息中提取以下答案。已经明确给出的不重复追问；缺失项合并成一次简短提问，不分多轮询问。
+
+1. **地点、背景与文案**：建筑/街区名称、城市或地址，用户知道的背景，以及必须出现或禁止出现的文案。若用户没有自备文案，再确认是“由 Skill 检索后提炼短词”，还是“只使用用户确认的名称与地点”。用户不知道建筑名时，可以回答“不知道，请协助识别”，不能据外观直接编造。
+2. **生成数量**：本次需要几张独立海报方案。数字指不同构图/材质方案的张数，不把原图对照拼图计入海报张数。
+3. **是否生成原图对照拼图**：在海报生成前确认。选择“是”时，竖向原图默认原图在左、海报在右；横向原图（包括 16:9）默认原图在上、海报在下。多张海报默认每张各生成一张对应拼图；正方形、混合方向或用户要求固定平台比例时再确认方向/裁切。
+
+可一次性这样询问：
+
+```text
+生成前确认一下：
+1. 这是哪里、有什么背景？有没有必须加入或不要出现的文案（也可以让我检索提炼）？
+2. 这次要生成几张不同方案？
+3. 要不要同时生成原图对照拼图？竖图默认左右拼，横图默认上下拼。
+```
+
+只有三项都有答案后才开始生成。用户回答“你决定”也算授权 Skill 选择；此时默认生成 1 张，文案采用已确认名称/地点与可核实短词，拼图默认不生成。
+
 ## 三阶段模板化工作流
 
 模板不是固定画框，而是一组可以追溯来源、具有兼容条件的设计变量。不要先选择一个风格名再套效果。
@@ -136,6 +155,8 @@ Asset type: editorial travel poster
 Input images: Image 1: edit target and sole source of architectural geometry; Image 2: optional frontend-rendered composition/layout reference
 Primary request: transform the real photo into <mode> while preserving the photographed building
 Subject: <confirmed building and location>
+Output count: <confirmed number of independent poster variants>
+Comparison collage: <no / one per poster; portrait side-by-side / landscape stacked>
 Information mode: thematic typography by default / explanatory annotation only when explicitly requested
 Grid: <columns, margins, gutters, baseline, subject spans, text spans, controlled break>
 Alignment groups: <elements sharing each left edge, right edge, center axis, or baseline>
@@ -183,14 +204,13 @@ Avoid: top-text/bottom-photo template, disconnected title zone, unchanged photog
 
 若第一次结果只有局部对齐问题，优先修改垫图中的对应边界框、字号或裁切关系，再整体重绘；不要在结果上不断追加补丁文字。每轮只修一个变量并重复建筑不变量，避免主体漂移。
 
-## 生成后询问拼图
+## 按生成前选择输出拼图
 
-海报交付后询问用户是否需要原图对照拼图；不要因为这是 skill 的能力就自动生成。
-
-用户确认后使用 `scripts/make_comparison.py`：
+不要在交付后才第一次询问拼图。按生成前确认的输出计划执行；用户选择“不需要”时只交付海报，选择“需要”时在全部海报通过验收后使用 `scripts/make_comparison.py`：
 
 - 原图为竖图时默认左右拼，原图在左、海报在右。
 - 原图为横图时默认上下拼，原图在上、海报在下。
+- 多张海报默认每张分别与原图生成一张拼图，不把多张海报挤进同一个未经确认的长图。
 - 默认保留两张图的完整内容，允许成品比例随之改变；若用户要求固定平台比例，再询问是否允许裁切。
 
 ```bash

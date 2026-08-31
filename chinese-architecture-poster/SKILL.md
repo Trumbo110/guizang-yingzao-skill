@@ -28,7 +28,9 @@ description: Transform user-shot photos of Chinese historic, vernacular, reconst
 - 将用户照片标记为 **edit target**；其他样图只能作为参考，不能把其中的建筑、文字、标志或文化符号直接移入目标照片。
 - 读取 [references/design-element-library.md](references/design-element-library.md)，逐项分析内容、字体角色、网格、建筑类型与占位、背景、颜色、图形、材质、遮挡和信息密度。
 - 使用内置参考组时读取 [references/reference-encoding-matrix.md](references/reference-encoding-matrix.md)。新参考图也按相同字段编码；把“观察到什么”“为何有效”“可借用什么”“何时不适用”分开。
+- 使用 `参考/参考新/` 扩展组时逐张读取 [references/reference-encoding-expansion-2026.md](references/reference-encoding-expansion-2026.md)。不得跳到末尾只抄归纳；纯文字图只提供字体/网格机制，外国建筑与纯外文图必须执行中式转译门。
 - 先穷举候选要素，再删减。每个要素都要说明视觉任务；没有任务的装饰不进入候选集。
+- 对外国参考先写“视觉机制、目标照片几何对应、中文语义接管、地域材料接管、跨文化删除项”。可以迁移字窗、尺度、分栏、遮挡和材质关系，不能迁移外国地名、建筑、宗教符号、人物、徽章、纹样、品牌和广告。
 
 ### 2. 推断建筑处理
 
@@ -40,6 +42,7 @@ description: Transform user-shot photos of Chinese historic, vernacular, reconst
 ### 3. 有逻辑地混搭
 
 - 从候选集中选择一个基础构图、一个建筑提取策略、一个主材质、最多一个辅助材质、一套字体角色系统、一套颜色逻辑、一个主要空间冲突和可选的语境插入层。
+- 主体容器（字窗/连续竖窗/同轴多窗/模块拼贴）、背景尺度（来源正文场/重复短地名/尺度数字）和语境材料（地形场/区域纹样/可信档案）三类各最多选择一个；不要把扩展库变成元素清单全叠。
 - 允许从不同参考图取要素，但每项都要记录来源机制、与当前照片的兼容理由，以及它与其他已选要素的关系。
 - 混搭不是取平均。先建立一个主导机制，再用 1–2 个次要机制补足；不要让中心纪念碑、强对角线、密集拼贴等多个基础构图同时竞争。
 - 填写 [references/composition-blueprint.md](references/composition-blueprint.md)，通过兼容性和失败检查后才能生成。
@@ -80,6 +83,7 @@ description: Transform user-shot photos of Chinese historic, vernacular, reconst
 5. 文字与建筑的遮挡对象、方向、比例和不可遮挡区。
 6. 背景、色块、建筑、线稿和水面之间的明度、色相与纹理差异。
 7. 信息模式：默认填写主题词的字体角色、栏位和层级；只有“解释注释模式”才填写标签来源、目标构件、引线路由、终点和禁穿区。
+8. 外来参考的中式转译：保留的机制、目标建筑对应物、必须删除的文化内容，以及至少两个来自目标建筑的独有锚点。
 
 蓝图不能只写“六栏网格”“标题与建筑重叠”这类抽象要求，必须指出元素跨第几栏、在哪条轴线上相遇、谁遮住谁，以及遮挡多少。
 
@@ -97,6 +101,9 @@ description: Transform user-shot photos of Chinese historic, vernacular, reconst
 - 每一处重叠必须写成“参与元素、共同轴线、z 顺序、重叠范围、视觉目的、保护区”的重叠契约；只有靠得很近或随机压住不算空间设计。
 - 海报不是网页：默认禁止把构件注释做成一组重复的卡片、徽章、按钮、圆角容器或带投影的信息组件。资料应先成为同一字体场中的边栏、窄列、反白小字或无底色注释；只有局部对比无法解决时才允许一个无投影的扁平色条。
 - 默认采用两个中性色加一个强调色；优先从建筑原生色、地域材料或拍摄光线中取色，并让强调色连接至少两类元素。不要默认添加红圆、印章、短线或其他“东方海报”符号。
+- 使用外国参考的配色时只保留冷暖、明度和面积关系，具体颜色重新从目标建筑的朱墙、青瓦、灰砖、木色、琉璃、黄土、煤黑、石灰或现场光线取样；禁止保留原参考的国旗色、宗教色和品牌色。
+- 字窗、连续竖窗和同轴多窗只是构图容器，不算图像风格化。窗内建筑仍须进行 2–4 阶明度压缩，并在网点、线刻、双色套印、区域平涂或局部原色中至少选择两项。
+- 使用来源正文、诗文、题记、年份、层数、高度、长度、图纸、旧照或传统纹样时必须记录来源。无来源则删除；照片轮廓抽取不能冒充测绘图，随机数字不能冒充历史数据。
 - 默认的“主题文字模式”不使用可见规则线、边框、引线、下划线、箭头或标注端点。网格只存在于设计和检查阶段；只有用户明确要求信息图、测绘感或构件解析时，功能线才可进入成图。
 - 图片内只放必要短文案。复杂文字系统不要只靠提示词描述位置；先读取 [references/frontend-layout-guide.md](references/frontend-layout-guide.md)，用真实字体和网格制作排版垫图，再让图像模型整体重绘。
 
@@ -123,13 +130,16 @@ Subject: <confirmed building and location>
 Information mode: thematic typography by default / explanatory annotation only when explicitly requested
 Grid: <columns, margins, gutters, baseline, subject spans, text spans, controlled break>
 Alignment groups: <elements sharing each left edge, right edge, center axis, or baseline>
+Selected modules: <one subject container or none; one background-scale mechanism or none; one context-material layer or none>
 Layer stack back-to-front: <paper> -> <ghost type/shape> -> <architecture plate> -> <foreground title/labels>
 Occlusion map: <element A hides B by x%; C sits over D; protected areas>
 Typography roles: <display Chinese, structural Latin, metadata sans, exact spans and scale>
+Typography source: <verified title, short facts, source text, pinyin/translation; no invented copy>
 Material map: <paper grain, flat color plane, architecture halftone/linework, smooth reflective region>
 Architecture transformation: <cutout scope, 2–4 value bands, region-by-region posterization, halftone, engraving, misregistration>
-Background transformation: <replace/retain; color field, texture frequency, gradient or flatness>
+Background transformation: <replace/retain; color field, texture frequency, gradient or flatness; at least two deliberate differences from the original photo when strong stylization is requested>
 Color separation: <background, subject ink, midtone, accent; boundary contrast>
+Cross-cultural translation: <reference mechanism retained; Chinese semantics and local material source; foreign buildings, symbols, motifs, brands, ads, QR codes, people and filler text removed>
 Line policy: none in thematic typography mode; otherwise list each functional line and its endpoints
 Text (verbatim): "<confirmed copy only>"
 Constraints: preserve geometry, viewpoint, proportions, rooflines, materials, and distinctive details; no invented architectural elements; exact text only; no logo; no watermark
@@ -150,6 +160,9 @@ Avoid: top-text/bottom-photo template, disconnected title zone, unchanged photog
 - 网格的栏线能解释主要元素的起止位置，强调色至少连接两个不同类别的元素，而不是孤立装饰。
 - 解释注释模式中的任意规则线或引线都不穿过可读文字；注释线的起点、折点和终点均可解释，且目标构件唯一。
 - 每一处文字—文字或文字—建筑重叠都能说出共同轴线、前后顺序和视觉任务；说不出来的重叠必须删除。
+- 主体容器、背景尺度和语境材料各不超过一个；字窗保留越界身份锚点，多窗可沿共同轴拼回，纹样只占 1–2 个区域且不吞掉主檐、塔刹、入口或匾额。
+- 纯文字参考没有带来虚构诗文、日期、活动、签名、印章或赞助信息；外国参考没有带来异国建筑、宗教符号、人物、徽章、纹样、品牌或广告。
+- 隐去中文地名后，画面仍可凭目标建筑的轮廓、材料、构件或地域色被识别；若只剩“把外国模板换成中文”，判为中式转译失败。
 - 页面中没有成组重复的卡片、按钮式年份、投影标签或仪表盘式编号；若去掉容器后层级就消失，说明字体、尺度和网格尚未设计完成。
 - 主题文字模式中没有可见线、构件指向、编号式科普或定义句；事实短词已经成为尺度、色彩、反白、节奏或遮挡的一部分。
 - 建筑、天空、环境与前景都按材质图发生可见变化；若只有建筑被抠出而天空和背景仍近似原照片，判为未完成。

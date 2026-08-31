@@ -1,31 +1,47 @@
-# 真实字体排版垫图工作流
+# 排版参考的条件启用工作流
 
-当海报依赖严格的共享边线、结构性大字、竖排、跨栏或文字—建筑遮挡时，先用前端制作排版垫图，再让图像模型整体重绘。这个方法提高构图服从度，但不承诺像素级字形复制。
+前端垫图不是默认步骤。它只有在自身排版质量可被程序证明时才可能提高构图服从度；错误的文字边界、碰撞、字距和竖排顺序会成为更强的错误视觉证据。无法运行完整门控检查时，只制作无文字的几何骨架，或完全跳过垫图。
 
 ## 为什么有效
 
-纯文字提示词只能描述“六栏”“左对齐”“标题被屋檐遮挡”等抽象关系；图像模型仍需要自行估算每个边界框。垫图把这些关系直接变成像素证据：
+纯文字提示词只能描述“六栏”“左对齐”“标题被屋檐遮挡”等抽象关系；图像模型仍需要自行估算每个边界框。**通过验收的**文字垫图可以把关系变成像素证据：
 
 - 字体的宽窄、字面大小、字距和行距已经可见；
 - 元素从哪一栏开始、跨几栏、与哪条边共享对齐已经可见；
 - 文字和建筑在哪个位置接触、谁在前、谁被裁切已经可见；
 - 大字、标签、规则线和负空间的面积关系已经可见。
 
-模型仍会重新绘制字形，所以可能出现几个像素的漂移、字宽变化或局部笔画差异。该流程的目标是“版式明显守规矩且材质统一”，不是印刷制版级还原。
+模型仍会重新绘制字形，所以可能出现漂移、字宽变化或局部笔画差异。垫图自身正确只是必要条件，不保证模型复制正确；因此必须把“垫图验收”和“生成结果验收”分成两道门。
 
 ## 选择垫图模式
 
-### `layout-only`：默认
+### `geometry-only`：默认参考模式
 
-垫图不包含任何原照片像素。使用中性灰色多边形、矩形或简单剪影标出建筑占位、主导轴、屋檐方向和遮挡边界。它是默认方案，尤其适用于限色、版画、网点、线刻、拼贴或完全替换天空。
+骨架不包含原照片像素，也不包含任何真实文字、伪字、文字框、空卡片或可见网格。只用中性剪影和大面积色块标出建筑占位、主导轴、屋檐方向、负空间、背景区域和遮挡方向。文字角色、准确文案、层级和大致栏位写进蓝图与提示词，不把未经验证的排版像素交给模型。
 
-这样能把“布局控制”和“图像处理”解耦：Image 2 不能诱导模型保守复制原照片，建筑材质只能由 Image 1 和提示词重新推断。
+这样能把“主体构图控制”和“文字生成”解耦：Image 2 不能诱导模型保守复制原照片，也不会把错误字距和碰撞强化给模型。它不用于证明文字已经对齐。
+
+### `typeset-guide`：完整文字垫图，默认关闭
+
+仅当本地排版实现和自动检查均可用时启用。必须使用真实字体文件和父级布局组件，不得用手写 SVG `x/y`、逐字散排或大量 magic number 代替排版系统。生成前必须保存门控报告；没有报告就视为未通过。
+
+硬门槛：
+
+- `document.fonts.ready` 完成，目标字体逐个 `document.fonts.check()` 成功，实际字体族与期望一致；
+- 每个文字块同时记录布局框和可见字面框，不只读取 nominal bounding box；
+- 任意两个不属于重叠契约的文字禁穿区交集面积为 0；
+- 所有文字位于安全区内，无画布溢出、裁字或隐形截断；
+- 共享轴误差不超过画布宽度约 `0.25%`，标题父级内部不允许子轨单独自由定位；
+- 中文竖排、整行旋转英文和逐字符 upright 英文必须明确选择一种，阅读顺序经过人工预览；
+- `grid-check` 关闭后层级仍由字重、字号、留白和对齐成立。
+
+任一失败，降级到 `geometry-only` 或纯提示词，不允许手动拖两下后跳过检测。
 
 ### `photo-overlay`：摄影保留模式
 
 把原照片作为垫图底层，只在其上排字。仅在用户明确要求轻度调色、摄影封面或最大限度保持自然天空与材料细节时使用。它能更准确地预演文字—建筑接触位置，但容易让模型把垫图当成半成品，从而降低风格化幅度。
 
-不要在需要明显艺术转译时使用 `photo-overlay`。
+不要在需要明显艺术转译时使用 `photo-overlay`。只要其中含文字，它仍属于 `typeset-guide`，必须通过同一套门控。
 
 ## 字体来源
 
@@ -38,25 +54,27 @@
 
 不要依赖浏览器悄悄回退字体。截图前检查实际字体名称和中文覆盖；远程字体加载失败时停止渲染或切换到已知本地字体。
 
-## 制作垫图
+## 制作参考图
 
 1. 先解析本次 Recipe/Token，记录完整 Token ID 清单；不要直接把 Recipe 名当作 CSS 类或提示词。
 2. 先对照片做主体预检：标出建筑中轴、可用水平参照、相机滚转、梯形透视、真实屋坡和真实不对称。需要校正时先生成扶正后的建筑底图并重新裁切；垫图中的中性主体占位以校正后范围为准。
 3. 画布匹配最终比例和预期输出尺寸。
-4. 根据 `cap.primitive.grid-*`、`cap.primitive.margin-standard`、`cap.primitive.gutter-standard` 和 `cap.primitive.optical-alignment` 建立 CSS Grid、外边距、沟槽、基线与字面对齐变量。
-5. 默认使用 `layout-only`：以中性占位形状标出建筑范围和主导轴，不嵌入原图；只有用户明确要求摄影保留时才把原图作为底层。
-6. 使用最终真实文案和字体，按 `cap.type.*` 设置展示标题、结构性大字、地点标签和资料文字。
+4. 根据 `cap.primitive.grid-*`、`cap.primitive.margin-standard` 和 `cap.primitive.gutter-standard` 建立主体与色场骨架。
+5. 默认输出 `geometry-only`：以中性占位形状标出建筑范围和主导轴，不嵌入原图，不绘制文字和文字框。
+6. 只有已声明启用 `typeset-guide` 且门控工具可用时，才加载最终真实文案和字体，并按 `cap.type.*` 设置展示标题、结构性大字、地点标签和资料文字。
 7. 用 `clip-path`、蒙版或明确的 z-index 执行 `cap.layout.*` 与 `cap.depth.*`；不要为了精细抠图而牺牲排版决策速度。
-8. 在元素上记录 `data-token="cap..."`，在根节点记录本次解析后的 Token 清单，便于检查和回溯；同一元素可以消费多个不同类别 Token。
+8. 在元素上记录 `data-token="cap..."`，在根节点记录本次解析后的 Token 清单与参考模式；同一元素可以消费多个不同类别 Token。
 9. 导出：
    - `grid-check.png`：显示栏线和基线，仅用于人工检查；
    - `layout-guide.png`：关闭栏线和调试框，保留最终近似版式，作为模型输入。主题文字模式不保留任何功能线；解释注释模式只保留蓝图列出的线。
 
-最少检查：建筑扶正轴、裁切边界、共同左边线、共同右边线、中轴、基线组、文字块宽高、可见字面边界、换行、竖排方向、强调色连接对象和身份保护区。解释注释模式再检查规则线端点。
+`geometry-only` 最少检查建筑扶正轴、裁切边界、中轴、主体范围、负空间、强调色连接对象和身份保护区。`typeset-guide` 还必须检查共同左右边线、基线组、文字块宽高、可见字面边界、换行、禁穿区、竖排方向和门控报告。解释注释模式再检查规则线端点。
 
 `visual.swatch` 只用于 Token 目录预览，不能直接复制到垫图。垫图中的具体色值由 `cap.color.material-derived` 和目标照片取色覆盖。
 
 ## 把网格变成约束，而不是背景装饰
+
+本节只适用于 `typeset-guide` 的排版实现；`geometry-only` 不绘制或模拟文字。
 
 每个主要元素必须记录四个值：`column-start`、`column-span`、`baseline-start`、`baseline-span`，并加入一个 `alignment-group`，说明它与哪些元素共享左边、右边、中轴或基线。元素边界应落在外边距、栏边、沟槽中线或基线上；只有蓝图中声明的 1–2 个破格点可以例外。
 
@@ -156,14 +174,15 @@ z 顺序：结构字在后，建筑在前
 
 ```text
 Image 1: edit target and sole source of architectural geometry.
-Image 2: frontend-rendered layout-only reference; contains no target-photo pixels and defines only text bounding boxes, shared alignments, line breaks, neutral subject footprint, negative space, and occlusion direction. In explanatory-annotation mode only, it may also define functional-line endpoints.
+Image 2 when geometry-only: contains no target-photo pixels and no text; defines only neutral subject footprint, corrected axis, background regions, negative space and occlusion direction.
+Image 2 when typeset-guide: contains verified real text and may define glyph hierarchy, shared alignments and line breaks only because a saved gate report confirms zero collision, overflow and font fallback.
 ```
 
 提示模型“整体重绘”而不是“粘贴数字文字”，并明确：
 
-- Image 2 的空间关系优先于纯文字描述；
+- Image 2 的已声明空间关系优先于纯文字描述；`geometry-only` 不控制字形、字距或文字对齐；
 - Image 2 的中性建筑占位不是材质参考，必须用 Image 1 的真实结构替换；
-- 继承大致字体类别、字号比例、边界框和共同轴线；
+- 只有 `typeset-guide` 才要求继承大致字体类别、字号比例、边界框和共同轴线；
 - 文字、建筑、纸张和网点要共享同一印刷语言；
 - 允许自然字形变化，但不得增加文案；
 - 原照片仍是建筑几何、匾额、装饰和视角的唯一来源。
@@ -185,7 +204,7 @@ Image 2: frontend-rendered layout-only reference; contains no target-photo pixel
 
 ## 验收与迭代
 
-将输出和 `layout-guide` 并排检查：
+根据参考模式验收。`geometry-only` 只比较建筑轴、主体占位、负空间、色场与遮挡方向；以下文字项仅在 `typeset-guide` 通过门控时比较：
 
 - 主要共享边线的偏差最好不超过画布宽度约 1%–2%；
 - 正立面建筑主轴与画布垂直轴的偏差最好不超过约 `0.5°`；若保留斜透视，必须在蓝图说明这是叙事选择而不是遗漏校正；
@@ -202,4 +221,4 @@ Image 2: frontend-rendered layout-only reference; contains no target-photo pixel
 - 建筑、天空、环境与前景均发生了区域性材质变化；不能是“原建筑抠图 + 新文字”或“原图统一加颗粒”。
 - 没有孤立在角落、不能解释其主题来源与空间任务的装饰。
 
-若某一处失败，修改垫图中对应的字号、边界框、裁切多边形或对齐线，再整体重绘。不要用越来越长的提示词补偿一个错误的视觉边界框，也不要默认在结果上重新堆叠文字。
+若 `typeset-guide` 自身出现任意碰撞、溢出、错误竖排或无法解释的对齐，立即弃用并降级，不能继续生成。若垫图通过但模型输出失败，只改一个父级组件或减少文案后整体重绘；不要用越来越长的提示词补偿错误边界框，也不要默认在结果上重新堆叠文字。

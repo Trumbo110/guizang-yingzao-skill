@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "namespace": "cap",
   "description": "Chinese architecture editorial poster design tokens",
   "mutex_groups": [
@@ -1155,6 +1155,22 @@
       "sources": ["system"]
     },
     {
+      "id": "cap.policy.typeset-guide-gated",
+      "tier": "semantic",
+      "category": "policy",
+      "label": "文字垫图门控",
+      "intent": "阻止未经字体、碰撞和对齐验收的排版图成为模型的错误视觉证据",
+      "value": {"default_reference": "geometry-only", "typeset_default": "disabled", "required_checks": ["font-loaded", "no-fallback", "ink-bounds-measured", "collision-zero", "overflow-zero", "shared-axis-pass", "vertical-order-reviewed"]},
+      "tags": ["垫图", "排版验收", "碰撞", "字体回退", "降级"],
+      "requires": ["cap.primitive.optical-alignment"],
+      "compatible": ["cap.policy.no-ui-cards", "cap.policy.no-visible-lines"],
+      "conflicts": [],
+      "constraints": ["默认参考图不得含文字、伪字、文字框或空卡片", "完整文字垫图必须保存全部门控通过报告", "任一文字碰撞、溢出、字体回退或错误竖排立即降级为 geometry-only 或纯提示词", "禁止用手写 SVG x/y 和肉眼微调替代排版系统"],
+      "prompt": "Use a geometry-only reference by default. Do not provide a text-bearing layout reference unless deterministic font loading, glyph-bound measurement, zero-collision, zero-overflow, shared-axis and vertical-reading-order checks all pass.",
+      "visual": {"glyph": "驗", "swatch": "linear-gradient(90deg,#d9d0c1 0 58%,#9d3a31 58% 64%,#283f62 64%)"},
+      "sources": ["system"]
+    },
+    {
       "id": "cap.policy.background-rebuild",
       "tier": "semantic",
       "category": "policy",
@@ -1193,6 +1209,7 @@
         "cap.color.material-derived",
         "cap.policy.no-visible-lines",
         "cap.policy.no-ui-cards",
+        "cap.policy.typeset-guide-gated",
         "cap.policy.no-orphan-decorations",
         "cap.policy.background-rebuild"
       ],
@@ -1219,6 +1236,7 @@
         "cap.color.material-derived",
         "cap.policy.no-visible-lines",
         "cap.policy.no-ui-cards",
+        "cap.policy.typeset-guide-gated",
         "cap.policy.no-orphan-decorations",
         "cap.policy.background-rebuild"
       ],
@@ -1246,6 +1264,7 @@
         "cap.color.duotone-complement",
         "cap.policy.no-visible-lines",
         "cap.policy.no-ui-cards",
+        "cap.policy.typeset-guide-gated",
         "cap.policy.no-orphan-decorations",
         "cap.policy.background-rebuild"
       ],
@@ -1272,6 +1291,7 @@
         "cap.color.material-derived",
         "cap.policy.no-visible-lines",
         "cap.policy.no-ui-cards",
+        "cap.policy.typeset-guide-gated",
         "cap.policy.cultural-localization",
         "cap.policy.no-orphan-decorations"
       ],
@@ -1298,6 +1318,7 @@
         "cap.color.material-derived",
         "cap.policy.no-visible-lines",
         "cap.policy.no-ui-cards",
+        "cap.policy.typeset-guide-gated",
         "cap.policy.no-orphan-decorations",
         "cap.policy.background-rebuild"
       ],
@@ -1327,6 +1348,7 @@
         "cap.depth.arch-over-ghost-type",
         "cap.policy.no-visible-lines",
         "cap.policy.no-ui-cards",
+        "cap.policy.typeset-guide-gated",
         "cap.policy.no-orphan-decorations"
       ],
       "optional": ["cap.context.verified-document", "cap.type.place-label"],
@@ -1355,6 +1377,7 @@
         "cap.depth.pattern-edge-over-arch",
         "cap.policy.no-visible-lines",
         "cap.policy.no-ui-cards",
+        "cap.policy.typeset-guide-gated",
         "cap.policy.cultural-localization",
         "cap.policy.no-orphan-decorations"
       ],

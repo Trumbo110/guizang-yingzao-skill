@@ -6,6 +6,17 @@
 
 先记录已选机制，避免无理由拼接：
 
+```text
+Recipe ID（可选）：
+候选 Token ID：
+依赖展开后的 Token ID：
+互斥槽检查：subject-container __/1；background-scale __/1；context-material __/1；expressive-type __/1；line-policy __/1
+冲突检查：无 / <冲突对>
+本次参数覆盖：<Token ID.path = value；只记录因照片产生的覆盖>
+```
+
+先用 `python3 scripts/design_tokens.py recipe <Recipe ID>` 展开依赖，或用 `query` 逐项选取。Recipe 与预览色片不直接进入生成提示词；只编译已解析 Token 的意图、参数、约束和 `prompt`。
+
 | 已选要素 | 来源参考/机制 | 在目标照片中解决什么问题 | 与其他要素为何兼容 | 舍弃的候选 |
 | --- | --- | --- | --- | --- |
 | 基础构图 |  |  |  |  |

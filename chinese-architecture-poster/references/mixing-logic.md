@@ -4,13 +4,23 @@
 
 ## 阶段 A：建立候选集
 
-1. 用 [design-element-library.md](design-element-library.md) 编码每张参考图。
+1. 先读 [token-system.md](token-system.md)，用 [design-element-library.md](design-element-library.md) 解释判断，并从 [design-tokens.json](design-tokens.json) 选择稳定 Token ID。
 2. 新增扩展参考逐张读取 [reference-encoding-expansion-2026.md](reference-encoding-expansion-2026.md)；不得只读末尾归纳而跳过对应图片卡。
 3. 每项观察分成六栏：`事实观察`、`视觉作用`、`可借用模块`、`目标照片对应物`、`禁用条件`、`跨文化删除项`。
 4. 将相同作用的要素归为候选集，例如“建立背景尺度”的候选可以是来源正文场、低对比大字、单个色窗或建筑阴影；它们不是必须全部使用。
 5. 删除无法解释作用、依赖原图品牌、没有目标照片几何对应物或文化语境不匹配的元素。
 
 纯文字参考只向字体、网格、密度和留白候选集供给变量；不得因此生成虚构内容。外国建筑和外文参考先记录原机制，再通过“中式转译编译器”，不能直接成为风格模板。
+
+可以先运行：
+
+```bash
+python3 scripts/design_tokens.py query --tag <照片关键词>
+python3 scripts/design_tokens.py query --compatible-with <主导 Token ID>
+python3 scripts/design_tokens.py recipe <Recipe ID>
+```
+
+检索结果只是候选。`visual` 字段只用于目录色片；真正选择仍依据照片几何、事实来源和 `requires / conflicts / constraints`。
 
 ## 阶段 B：读取目标照片
 
@@ -102,6 +112,8 @@
 - 单个色窗可以辅助中心纪念碑、侧边切入或字窗，但必须同时连接标题色和建筑轮廓；否则删除。
 - 可见边框、路线、圆规线、显性模块格和注释引线统一受 `Line policy` 控制。主题文字模式或用户禁线时全部关闭。
 
+这些限制以 `design-tokens.json` 的 `mutex_groups` 为机器可读真源。自然语言与 Token 发生差异时先修正两者，不要静默选择一个版本。
+
 ### 冲突预算
 
 - 只选一个主要冲突，例如“严整中轴 vs 右侧偏置红块”或“精密线稿 vs 粗网点”。
@@ -134,6 +146,9 @@
 
 ```text
 方案名：
+Recipe（可选）：
+已选 Token ID：
+依赖展开后 Token ID：
 基础构图来源机制：
 目标照片几何对应：
 建筑提取与材质：
@@ -146,6 +161,8 @@
 ```
 
 按以下维度各评 1–5 分：建筑身份、照片适配、元素兼容、空间层次、文字准确、缩略图识别。优先选择总分高且没有单项低于 3 的方案，而不是元素最多的方案。
+
+方案确定后运行 `design_tokens.py recipe` 或人工展开 `requires`。任一互斥槽超额、任一 `conflicts` 命中或硬依赖缺失，方案直接无效；不能用降低透明度等视觉补丁绕开结构冲突。
 
 ## 阶段 F：编译成生成提示词
 
@@ -160,7 +177,8 @@
 7. 颜色来源、面积和强调色连接对象。
 8. 遮挡图和身份保护区。
 9. 跨文化删除项与中式语义接管。
-10. 失败条件。
+10. 选中 Token 的约束和 ID；只编译其 `prompt`，不把 Recipe 名当风格词。
+11. 失败条件。
 
 不要把要素库全部写进提示词。只编译已经选中且彼此兼容的组合。
 

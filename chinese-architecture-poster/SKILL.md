@@ -26,6 +26,7 @@ description: Transform user-shot photos of Chinese historic, vernacular, reconst
 ### 1. 分析并抽离要素
 
 - 将用户照片标记为 **edit target**；其他样图只能作为参考，不能把其中的建筑、文字、标志或文化符号直接移入目标照片。
+- 用 `scripts/design_tokens.py query` 按照片标签、类别或兼容关系检索 [references/design-tokens.json](references/design-tokens.json)，并以稳定 ID 记录候选；不要为普通任务整份加载 JSON。需要新建 Token、调整 Recipe 或理解解析规则时才读 [references/token-system.md](references/token-system.md)。预览色片不是强制配色。
 - 读取 [references/design-element-library.md](references/design-element-library.md)，逐项分析内容、字体角色、网格、建筑类型与占位、背景、颜色、图形、材质、遮挡和信息密度。
 - 使用内置参考组时读取 [references/reference-encoding-matrix.md](references/reference-encoding-matrix.md)。新参考图也按相同字段编码；把“观察到什么”“为何有效”“可借用什么”“何时不适用”分开。
 - 使用 `参考/参考新/` 扩展组时逐张读取 [references/reference-encoding-expansion-2026.md](references/reference-encoding-expansion-2026.md)。不得跳到末尾只抄归纳；纯文字图只提供字体/网格机制，外国建筑与纯外文图必须执行中式转译门。
@@ -42,6 +43,7 @@ description: Transform user-shot photos of Chinese historic, vernacular, reconst
 ### 3. 有逻辑地混搭
 
 - 从候选集中选择一个基础构图、一个建筑提取策略、一个主材质、最多一个辅助材质、一套字体角色系统、一套颜色逻辑、一个主要空间冲突和可选的语境插入层。
+- 记录所选 Token ID，递归展开 `requires`，检查 `conflicts` 和 `mutex_groups`。任何硬冲突、依赖缺失或槽位超额都必须更换 Token，不能靠透明度或减少面积假装兼容。
 - 主体容器（字窗/连续竖窗/同轴多窗/模块拼贴）、背景尺度（来源正文场/重复短地名/尺度数字）和语境材料（地形场/区域纹样/可信档案）三类各最多选择一个；不要把扩展库变成元素清单全叠。
 - 允许从不同参考图取要素，但每项都要记录来源机制、与当前照片的兼容理由，以及它与其他已选要素的关系。
 - 混搭不是取平均。先建立一个主导机制，再用 1–2 个次要机制补足；不要让中心纪念碑、强对角线、密集拼贴等多个基础构图同时竞争。
@@ -84,6 +86,7 @@ description: Transform user-shot photos of Chinese historic, vernacular, reconst
 6. 背景、色块、建筑、线稿和水面之间的明度、色相与纹理差异。
 7. 信息模式：默认填写主题词的字体角色、栏位和层级；只有“解释注释模式”才填写标签来源、目标构件、引线路由、终点和禁穿区。
 8. 外来参考的中式转译：保留的机制、目标建筑对应物、必须删除的文化内容，以及至少两个来自目标建筑的独有锚点。
+9. Recipe（若使用）、候选 Token、依赖展开结果、互斥/冲突检查及因本张照片产生的参数覆盖。
 
 蓝图不能只写“六栏网格”“标题与建筑重叠”这类抽象要求，必须指出元素跨第几栏、在哪条轴线上相遇、谁遮住谁，以及遮挡多少。
 
@@ -131,6 +134,7 @@ Information mode: thematic typography by default / explanatory annotation only w
 Grid: <columns, margins, gutters, baseline, subject spans, text spans, controlled break>
 Alignment groups: <elements sharing each left edge, right edge, center axis, or baseline>
 Selected modules: <one subject container or none; one background-scale mechanism or none; one context-material layer or none>
+Design tokens: <resolved cap.* IDs; include no unresolved recipe aliases>
 Layer stack back-to-front: <paper> -> <ghost type/shape> -> <architecture plate> -> <foreground title/labels>
 Occlusion map: <element A hides B by x%; C sits over D; protected areas>
 Typography roles: <display Chinese, structural Latin, metadata sans, exact spans and scale>

@@ -2,6 +2,29 @@
 
 本库用于阶段一“分析并抽离要素”。分析参考图时不要只写风格形容词；应在下列字段中记录观察、作用、适用条件和禁用条件。
 
+## Token 索引
+
+本文件解释设计判断，[design-tokens.json](design-tokens.json) 提供稳定、机器可读的选择接口，[token-system.md](token-system.md) 定义解析规则。两者分工如下：
+
+- 本文件回答“为什么成立、什么时候适用”。
+- Token 回答“它叫什么、依赖什么、兼容/冲突什么、如何进入提示词”。
+- Recipe 只提供已校验起点，不能替代目标照片诊断。
+
+| 本库章节 | Token 前缀 | 常用检索 |
+| --- | --- | --- |
+| 信息内容 | `cap.content.*` | `--category content` |
+| 字体与文字行为 | `cap.type.*` | `--category typography` |
+| 网格与构图 | `cap.primitive.grid-*`、`cap.layout.*` | `--category grid` / `--category layout` |
+| 主体与抠取 | `cap.subject.*` | `--category subject` |
+| 背景 | `cap.background.*` | `--category background` |
+| 配色 | `cap.color.*` | `--category color` |
+| 材质 | `cap.material.*` | `--category material` |
+| 空间与遮挡 | `cap.depth.*` | `--category depth` |
+| 资料与纹样来源 | `cap.context.*` | `--category context` |
+| 全局约束 | `cap.policy.*` | `--category policy` |
+
+需要检索、选配或验证时运行 `python3 scripts/design_tokens.py ...`。Token 的 `visual.swatch` 和 `glyph` 只服务可视化目录；不得把预览色片当成必须复制的配色。
+
 ## 1. 信息内容
 
 ### 必要信息

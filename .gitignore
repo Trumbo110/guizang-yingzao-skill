@@ -1,1 +1,7 @@
 .DS_Store
+.venv/
+output/
+__pycache__/
+*.pyc
+参考/
+示例图/

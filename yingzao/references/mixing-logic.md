@@ -27,7 +27,7 @@ python3 scripts/design_tokens.py recipe <id> --json
 
 ## 4. Token 关系
 
-每张海报只选一个 `layout-primary`、`subject-container`、`background-scale`、`context-material`、`expressive-type`、`glyph-morphology` 和 `line-policy`。递归展开 `requires`；任一 `conflicts` 或 mutex 超额即淘汰。兼容项可以加分，不要求把所有 Token 装入方案，更不把 Token prompt/constraints 串进最终提示词。
+每张海报只选一个 `layout-primary`、`subject-container`、`background-scale`、`context-material`、`expressive-type`、`glyph-morphology` 和 `line-policy`。递归展开 `requires`；任一 `conflicts` 或 mutex 超额即淘汰。兼容项可以加分，不要求启用所有 optional Token，也不逐条串接 Token 的通用 prompt/constraints；但已经进入 Recipe 的 resolved Token 与主动选择的 optional Token 必须全部并入 `design-plan.json` 的四域模型动作或允许的确定性预处理。
 
 ## 5. 常见照片方向
 

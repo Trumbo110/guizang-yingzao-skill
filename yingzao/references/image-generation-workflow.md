@@ -64,6 +64,59 @@ Image 4+ — 可选同址主体来源：只使用逐张点名的对象
 
 普通裁切、统一滤镜、矩形拼版、网页式卡片或纯文字叠加不构成图像模型增值。主导参考提供的是整体设计逻辑，不是给成品加一层“参考色”。
 
+## 设计语义编译
+
+Recipe 不是只用于选参考。将 `design_tokens.py recipe <id> --json` 的完整输出保存为 `analysis/recipe.json`，并建立 `analysis/design-plan.json`。全部 `resolved_tokens` 和启用的 `selected_optional_tokens` 必须恰好投递一次：只有 `preflight / rectification` Token 可以进入 `preprocess_tokens`；其他 Token 必须组合进四个模型动作域。不要逐条拼接 Token 自带的 `prompt`，而要把相容 Token 合并成少量针对当前照片的可执行动作。
+
+```json
+{
+  "schema_version": 1,
+  "recipe_id": "cap.recipe.semantic-split-relief",
+  "selected_optional_tokens": [],
+  "preprocess_tokens": ["cap.subject.preflight-rectification"],
+  "bindings": [
+    {
+      "id": "S1",
+      "domain": "subject",
+      "token_ids": ["cap.subject.identity-protection", "cap.subject.full-building", "cap.policy.recipe-geometry-gate"],
+      "target": "Image 1 中完整相连的真实建筑主体",
+      "prompt_instruction": "语义抠取完整主体，保留屋脊、层级与不对称身份锚点；重新安排占幅并对屋面、木构、墙体分区转译材质",
+      "visible_result": "主体脱离原背景且分区材料清楚，不是统一滤镜",
+      "guide_markers": ["S1"]
+    },
+    {
+      "id": "B1",
+      "domain": "background",
+      "token_ids": ["cap.background.flat-field", "cap.material.arch-regional-flat", "cap.color.material-derived", "cap.policy.no-visible-lines", "cap.policy.no-ui-cards", "cap.policy.no-orphan-decorations", "cap.policy.background-rebuild"],
+      "target": "S1 外围的连续负空间",
+      "prompt_instruction": "重建为服务轮廓与标题的主动色场，并让取色来自真实建筑材料",
+      "visible_result": "背景形成清晰色形，不保留原天空或普通渐变",
+      "guide_markers": ["B1", "S1"]
+    },
+    {
+      "id": "T1",
+      "domain": "typography",
+      "token_ids": ["cap.primitive.grid-6", "cap.primitive.optical-alignment", "cap.content.verified-name", "cap.content.verified-fact", "cap.type.display-cn", "cap.type.metadata", "cap.type.semantic-split-lockup", "cap.policy.typeset-guide-gated"],
+      "target": "主标题和资料字锁定组",
+      "prompt_instruction": "按字形简报重绘展示标题，保持资料字常规且沿垫图真实字面共同轴组织",
+      "visible_result": "展示字有独特骨架，大小字不是同一套普通宋体",
+      "guide_markers": ["T1"]
+    },
+    {
+      "id": "I1",
+      "domain": "interaction",
+      "token_ids": ["cap.layout.center-monument"],
+      "target": "S1 中轴主体与 T1 左右拆词标题之间的交界",
+      "prompt_instruction": "让中轴建筑轮廓以低对比浮雕连接左右两组标题，并在一处真实外轮廓形成共边或受控前后关系",
+      "visible_result": "缩略图可见主体把左右拆词标题连接成一个构图，而非三个孤岛",
+      "guide_markers": ["S1", "T1"]
+    }
+  ]
+}
+```
+
+四个 `domain` 缺一不可，总计使用 4–6 个合并后的 binding；每项必须同时写清 `target / prompt_instruction / visible_result / guide_markers`。同一 Token 不得重复投递，也不能只停留在 creative brief。编译器会把这些绑定插入真正传给 ImageGen 的 `Mechanism bindings` 段，并在 `generation-call.json.token_delivery` 留下追踪记录。
+
 ## 前置排版与字形
 
 ```bash
@@ -72,6 +125,8 @@ python3 scripts/typeset_compose.py blank analysis/typeset-spec.json analysis/typ
 ```
 
 报告必须通过字体 cmap、fallback、真实字面、碰撞、溢出、共享轴、primitive 禁穿区、遮挡契约与竖排顺序。垫图保持中性灰阶；不含最终配色、纹理、完整主体矩形或网页容器。
+
+垫图上的动作区域必须带与设计计划一致的短标记：`guide_marker` 使用 `S1 / B1 / T1` 这类 ASCII ID，`guide_label` 使用 `REAL SUBJECT / ACTIVE BACKGROUND / DISPLAY TITLE` 这类简短 ASCII 说明。编译器会把标记画成小徽标并验证 prompt↔guide 双向一致；这些徽标只用于告诉模型“哪个动作作用在哪里”，成图必须消失。
 
 展示层必须在 spec 中声明 `glyph_design_mode`。`literal` 使用 `guide_render: text`；`reinterpret` 必须已有 `analysis/glyph-brief.md` 并使用 `guide_render: scaffold`。后者在 Image 3 只画字符槽和小型字面标签，锁定范围、共同轴与阅读顺序，但不再用大号普通宋体或黑体轮廓锚定模型。地点、年代、拼音和资料字保持 `literal`，并可使用不同常规字族建立层级。
 
@@ -95,7 +150,7 @@ Text (verbatim): <必要短文案>
 Do not add: <不超过 5 个灾难性错误>
 ```
 
-`literal` 方案删除整行 `Display glyph design`；`reinterpret` 方案必须保留。不要附 Token ID、门控条目或历史问题清单。原构图成立时写 `preserve`，保护偏心、框景、对角动势或横向跨越；不为模板强行居中、对称或补全。
+`literal` 方案删除整行 `Display glyph design`；`reinterpret` 方案必须保留。不要手写 `Mechanism bindings`，也不要把 Token ID、门控条目或历史问题清单塞进上述提示词；该段由设计计划确定性编译。原构图成立时写 `preserve`，保护偏心、框景、对角动势或横向跨越；不为模板强行居中、对称或补全。
 
 ## 固定交接：先编译，再调用
 
@@ -109,12 +164,14 @@ python3 scripts/prepare_generation.py \
   --guide <typeset-guide.png> \
   --typeset-spec <typeset-spec.json> \
   --typeset-report <typeset-report.json> \
+  --recipe-json <recipe.json> \
+  --design-plan <design-plan.json> \
   --glyph-brief <glyph-brief.md> \
   --prompt <generation-prompt.txt> \
   --output-image <final/poster.png>
 ```
 
-`literal` 标题可省略 `--glyph-brief`。多图融合时在命令中追加一个或多个 `--support <同址来源图>`，并在 `Image roles` 中逐张点名 Image 4+。脚本会验证所有图不同、垫图尺寸与报告一致、报告已通过、提示词包含输入角色和主体/背景/互动段；`reinterpret` 还会验证 scaffold、准确标题、字形简报和逐字覆盖。它把输入复制到稳定路径并写出 `analysis/generation-call.json`。
+`literal` 标题可省略 `--glyph-brief`。多图融合时在命令中追加一个或多个 `--support <同址来源图>`，并在 `Image roles` 中逐张点名 Image 4+。脚本会验证所有图不同、垫图尺寸与报告一致、报告已通过、提示词包含输入角色和主体/背景/互动段；还会展开 Recipe，检查所有启用 Token 的唯一投递、四域动作、prompt↔guide 标记双向一致。`reinterpret` 另验证 scaffold、准确标题、字形简报和逐字覆盖。它把绑定动作编进最终提示词，把输入复制到稳定路径并写出 `analysis/generation-call.json`。
 
 只有终端返回 `READY` 才调用图像模型。调用时直接读取清单，严格映射：
 

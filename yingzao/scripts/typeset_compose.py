@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import unicodedata
 from pathlib import Path
@@ -28,6 +29,92 @@ ANCHORS = {
     "lm": (0.0, 0.5), "mm": (0.5, 0.5), "rm": (1.0, 0.5),
     "lb": (0.0, 1.0), "mb": (0.5, 1.0), "rb": (1.0, 1.0),
 }
+MARKER_RE = re.compile(r"^[A-Z][A-Z0-9_-]{0,11}$")
+
+
+def semantic_marker(item: dict[str, Any], element_id: str, errors: list[str]) -> tuple[str | None, str | None]:
+    """Read a compact ASCII guide marker that can be referenced verbatim in the model prompt."""
+    marker = str(item.get("guide_marker", "")).strip()
+    label = str(item.get("guide_label", "")).strip()
+    if not marker:
+        if label:
+            errors.append(f"{element_id}: guide_label requires guide_marker")
+        return None, None
+    if not MARKER_RE.fullmatch(marker):
+        errors.append(f"{element_id}: invalid guide_marker {marker!r}")
+    if not label:
+        errors.append(f"{element_id}: guide_marker requires guide_label")
+    elif not label.isascii() or not label.isprintable():
+        errors.append(f"{element_id}: guide_label must be printable ASCII for reliable guide rendering")
+    return marker, label or None
+
+
+def guide_marker_summary(
+    primitive_reports: list[dict[str, Any]], layer_reports: list[dict[str, Any]]
+) -> tuple[list[dict[str, Any]], list[str]]:
+    markers: dict[str, dict[str, Any]] = {}
+    errors: list[str] = []
+    for kind, reports in (("primitive", primitive_reports), ("text", layer_reports)):
+        for item in reports:
+            marker = item.get("guide_marker")
+            if not marker:
+                continue
+            label = item.get("guide_label")
+            current = markers.setdefault(marker, {"id": marker, "label": label, "elements": []})
+            if current["label"] != label:
+                errors.append(
+                    f"guide marker {marker!r} has conflicting labels {current['label']!r} and {label!r}"
+                )
+            current["elements"].append({"kind": kind, "id": item["id"]})
+    return [markers[key] for key in sorted(markers)], errors
+
+
+def render_guide_marker_badges(
+    canvas: tuple[int, int], primitive_reports: list[dict[str, Any]], layer_reports: list[dict[str, Any]]
+) -> Image.Image:
+    """Render small spatial IDs last so their correspondence survives the guide image."""
+    overlay = Image.new("RGBA", canvas, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(overlay)
+    font_size = max(13, min(28, round(canvas[0] * 0.016)))
+    try:
+        font = ImageFont.load_default(size=font_size)
+    except TypeError:  # Pillow < 10.1
+        font = ImageFont.load_default()
+    items: list[tuple[dict[str, Any], list[int]]] = []
+    for report in primitive_reports:
+        if not report.get("guide_marker"):
+            continue
+        if report.get("bbox"):
+            bbox = list(report["bbox"])
+        else:
+            xs = [point[0] for point in report.get("points", [])]
+            ys = [point[1] for point in report.get("points", [])]
+            if not xs or not ys:
+                continue
+            bbox = [min(xs), min(ys), max(xs), max(ys)]
+        items.append((report, bbox))
+    for report in layer_reports:
+        if report.get("guide_marker"):
+            items.append((report, list(report["layout_bbox"])))
+    for report, bbox in items:
+        text = f"[{report['guide_marker']}] {report['guide_label']}"
+        text_bbox = draw.textbbox((0, 0), text, font=font)
+        width = text_bbox[2] - text_bbox[0] + 12
+        height = text_bbox[3] - text_bbox[1] + 8
+        left, top, right, bottom = map(int, bbox)
+        if top - height - 4 >= 0:
+            x, y = left, top - height - 4
+        elif right + width + 4 <= canvas[0]:
+            x, y = right + 4, top
+        elif bottom + height + 4 <= canvas[1]:
+            x, y = left, bottom + 4
+        else:
+            x, y = left + 4, top + 4
+        x = max(0, min(canvas[0] - width, x))
+        y = max(0, min(canvas[1] - height, y))
+        draw.rectangle([x, y, x + width, y + height], fill=(24, 24, 24, 224))
+        draw.text((x + 6 - text_bbox[0], y + 4 - text_bbox[1]), text, font=font, fill=(255, 255, 255, 255))
+    return overlay
 
 
 def position(value: float | int, extent: int) -> float:
@@ -279,6 +366,7 @@ def draw_primitives(
     errors: list[str] = []
     for index, item in enumerate(spec.get("primitives", [])):
         primitive_id = str(item.get("id", f"primitive-{index + 1}"))
+        guide_marker, guide_label = semantic_marker(item, primitive_id, errors)
         kind = item.get("type")
         primitive_layer = str(item.get("layer", "background"))
         role = str(item.get("role", "")).strip().lower().replace("_", "-")
@@ -316,6 +404,8 @@ def draw_primitives(
                         "width_px": width,
                         "layer": primitive_layer,
                         "role": role or None,
+                        "guide_marker": guide_marker,
+                        "guide_label": guide_label,
                     }
                 )
             elif kind in {"polygon", "line"}:
@@ -339,6 +429,8 @@ def draw_primitives(
                         "width_px": width,
                         "layer": primitive_layer,
                         "role": role or None,
+                        "guide_marker": guide_marker,
+                        "guide_label": guide_label,
                     }
                 )
             else:
@@ -552,6 +644,7 @@ def main() -> int:
 
     for index, item in enumerate(spec.get("layers", [])):
         layer_id = str(item.get("id", f"layer-{index + 1}"))
+        guide_marker, guide_label = semantic_marker(item, layer_id, errors)
         text = str(item.get("text", ""))
         font_path = Path(str(item.get("font", ""))).expanduser()
         if not text:
@@ -719,6 +812,8 @@ def main() -> int:
                 "baseline_y": baseline_ys[0] if baseline_ys else None,
                 "baseline_y_first": baseline_ys[0] if baseline_ys else None,
                 "baseline_ys": baseline_ys,
+                "guide_marker": guide_marker,
+                "guide_label": guide_label,
             }
         )
 
@@ -738,6 +833,8 @@ def main() -> int:
         spec, primitive_reports, layer_reports
     )
     errors.extend(primitive_text_errors)
+    guide_markers, marker_errors = guide_marker_summary(primitive_reports, layer_reports)
+    errors.extend(marker_errors)
 
     report = {
         "art": art_label,
@@ -749,6 +846,7 @@ def main() -> int:
         "alignment_groups": alignment_reports,
         "primitive_text_intersections": primitive_text_intersections,
         "overlap_contracts": overlap_contracts,
+        "guide_markers": guide_markers,
         "errors": errors,
         "passed": not errors,
     }
@@ -772,6 +870,10 @@ def main() -> int:
             result = Image.composite(base, result, mask)
         result = Image.alpha_composite(result, subject_overlay)
     result = Image.alpha_composite(result, front)
+    if guide_mode and guide_markers:
+        result = Image.alpha_composite(
+            result, render_guide_marker_badges(base.size, primitive_reports, layer_reports)
+        )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     if args.output.suffix.lower() in {".jpg", ".jpeg"}:
         result.convert("RGB").save(args.output, quality=95, subsampling=0)

@@ -42,6 +42,7 @@ preflight / rectify 报告：__ / __
 
 ```text
 Recipe ID / family：__
+recipe.json / design-plan.json：__ / __
 主导参考实际路径：__
 适配：主体占幅 __；负空间拓扑 __；互动边界 __
 迁移：主体处理 __；主动背景 __；图文关系 __；材料 __
@@ -67,6 +68,7 @@ Recipe ID / family：__
 glyph brief / typeset spec / guide / report：__ / __ / __ / __
 generation prompt / call manifest / readback：__ / __ / __
 alignment groups / overlap contracts / vertical order：__ / __ / __
+语义标记：S1 __；B1 __；T1 __；其他 __
 
 统一边缘语言：硬切 / 羽化 / 纸撕 / 墨蚀 / 落影
 主材质 / 辅助材质 / 强调色来源：__ / __ / __
@@ -95,4 +97,5 @@ Composition repair：__
 灾难性禁项（最多五个）：__
 保存路径：__
 prepare_generation：READY / 未通过 __；call_signature：__
+Token 投递：prompt+guide __；preprocess __；missing 必须为 0
 ```

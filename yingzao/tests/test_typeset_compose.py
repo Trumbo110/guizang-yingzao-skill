@@ -152,12 +152,16 @@ class TypesetComposeGateTests(unittest.TestCase):
                 "type": "polygon",
                 "role": "subject-footprint",
                 "layer": "subject_front",
+                "guide_marker": "S1",
+                "guide_label": "REAL SUBJECT",
                 "points": [[0.05, 0.30], [0.95, 0.30], [0.88, 0.72], [0.12, 0.72]],
                 "fill": "#60645F",
                 "opacity": 72,
             }
         ]
         spec["layers"][0]["layer"] = "behind_subject"
+        spec["layers"][0]["guide_marker"] = "T1"
+        spec["layers"][0]["guide_label"] = "DISPLAY TITLE"
         spec["overlap_contracts"] = [
             {
                 "id": "roof-cuts-title",
@@ -173,7 +177,19 @@ class TypesetComposeGateTests(unittest.TestCase):
         primitive = report["primitives"][0]
         self.assertEqual(primitive["layer"], "subject_front")
         self.assertEqual(primitive["role"], "subject-footprint")
+        self.assertEqual(primitive["guide_marker"], "S1")
+        self.assertEqual(report["layers"][0]["guide_marker"], "T1")
+        self.assertEqual([item["id"] for item in report["guide_markers"]], ["S1", "T1"])
         self.assertTrue(report["overlap_contracts"][0]["used"])
+
+    def test_guide_marker_requires_a_portable_ascii_label(self) -> None:
+        spec = self.crossing_rule_spec()
+        spec["primitives"] = []
+        spec["layers"][0]["guide_marker"] = "T1"
+        spec["layers"][0]["guide_label"] = "展示标题"
+        completed, report = self.run_spec(spec)
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertTrue(any("printable ASCII" in error for error in report["errors"]))
 
     def test_display_layout_alignment_requires_reason(self) -> None:
         spec = {

@@ -5,11 +5,12 @@ description: Transform real Chinese architecture and place-based cultural photos
 
 # Yingzao · 营造
 
-把真实建筑与在地文化照片转译为有主体处理、主动背景、字形设计和空间互动的编辑海报。先从照片提出创意命题，再让一张兼容的主导参考强化它；Token 只负责检索，不能替代设计判断。
+把真实建筑与在地文化照片转译为有主体处理、主动背景、字形设计和空间互动的编辑海报。先从照片提出创意命题，再让一张兼容的主导参考强化它；Token 负责检索与机制追踪，不能替代设计判断。
 
 ## 核心合同
 
 - 高风格化任务固定使用：Image 1 校正原图、Image 2 一张主导参考实图、Image 3 稀疏中性排版垫图。生成前必须由 `scripts/prepare_generation.py` 编译成一次调用清单，不得互相替代、改序或在调用时重新概括提示词。
+- 所选 Recipe 必须保存为 `analysis/recipe.json`，再把全部启用 Token 编入 `analysis/design-plan.json`：除确定性校正项外，每个 Token 都要归入主体、背景、字体或互动动作，并指向 Image 3 中同名的区域标记。编译器把这些动作写入最终模型提示词；只在简报里出现、不进入提示词和垫图的 Token 视为未投递。
 - 创意命题必须先于参考检索，并同时说明：`主体如何处理 / 背景如何主动参与 / 文字如何与真实轮廓互动 / 哪个非默认排版动作打破双居中`。
 - `reinterpret` 展示字在首次生成前完成 `glyph-brief.md` 和逐字光学补偿，并在垫图使用 `guide_render: scaffold`，避免普通字体轮廓压过字形说明；不能只写宋体、黑体、衬线或“高级复古”。资料小字可使用另一常规字族。
 - 图像模型必须完成语义抠取、构图修复、共同重光、背景重建、区域材质、图文遮挡等代码不能替代的动作。普通裁图、滤镜、渐变和打字能复现的方案无效。
@@ -39,15 +40,17 @@ python3 scripts/design_tokens.py suggest \
   --tag <标签> --count <数量+1> --maximize-distance \
   --history output/yingzao/<run-id>/recipe-history.json \
   --record-history
+python3 scripts/design_tokens.py recipe <id> --json \
+  > output/yingzao/<run-id>/analysis/recipe.json
 ```
 
-零命中返回状态 2，此时换受控词重查。用 `recipe <id> --json` 取得真实 `reference_assets`；高风格化任务恰好选择一张主导参考。它必须与目标的主体占幅、负空间拓扑和互动边界兼容，并实际示范主体处理、主动背景和图文关系。选择方法见 [mixing-logic.md](references/mixing-logic.md)。
+零命中返回状态 2，此时换受控词重查。用 `recipe <id> --json` 取得真实 `reference_assets`，并将完整输出保存为 `analysis/recipe.json`；高风格化任务恰好选择一张主导参考。它必须与目标的主体占幅、负空间拓扑和互动边界兼容，并实际示范主体处理、主动背景和图文关系。选择方法见 [mixing-logic.md](references/mixing-logic.md)。
 
 把会改变生成决策的内容写入 [creative-brief.md](references/creative-brief.md)，再通过 [preflight-gates.md](references/preflight-gates.md) 的八个生成前门控。
 
 ### 2. 设计字形与空间关系
 
-按 [frontend-layout-guide.md](references/frontend-layout-guide.md) 用 `scripts/typeset_compose.py` 生成中性稀疏垫图。展示层必须显式声明 `glyph_design_mode`；`reinterpret` 只画字符槽与小型字面标签，不把普通字体的大轮廓喂成最终形制。垫图只锁必要文字、层级、共同轴、阅读顺序和主要遮挡，不锁最终颜色、材质或网页式容器。
+按 [frontend-layout-guide.md](references/frontend-layout-guide.md) 用 `scripts/typeset_compose.py` 生成中性稀疏垫图。先写 `design-plan.json`，把四域动作分别标为 `S1 / B1 / T1 / I1` 等；对应标题层、主体轮廓和背景区域必须使用 `guide_marker + guide_label` 标在垫图上。展示层必须显式声明 `glyph_design_mode`；`reinterpret` 只画字符槽与小型字面标签，不把普通字体的大轮廓喂成最终形制。垫图只锁必要文字、层级、共同轴、阅读顺序、动作区域和主要遮挡，不锁最终颜色、材质或网页式容器。
 
 展示标题为 `reinterpret` 时，按 [display-glyph-morphology.md](references/display-glyph-morphology.md) 保存 `analysis/glyph-brief.md`：选择一个字形谱系，记录至少五项可见特征，并逐字说明光学问题、轮廓动作和不可改变的标准部件。若声明主体压字，垫图必须用 Image 1 的真实轮廓建立 `subject-footprint` 和遮挡契约。
 

@@ -8,7 +8,7 @@
 
 ### `typeset-guide`（默认）
 
-只含一个展示标题组、一个地点/对象组和必要资料。不得嵌入目标照片像素，不含最终色场、纸纹、渐变、阴影、卡片、完整主体矩形或完成态装饰。若创意简报声明主体遮字，必须另含从 Image 1 真实轮廓描出的低对比 `subject-footprint`，让遮挡在垫图中实际发生。`reinterpret` 展示字用中灰色，只锁字面范围和轴线；资料字使用常规真实字体。
+只含一个展示标题组、一个地点/对象组和必要资料。不得嵌入目标照片像素，不含最终色场、纸纹、渐变、阴影、卡片、完整主体矩形或完成态装饰。若创意简报声明主体遮字，必须另含从 Image 1 真实轮廓描出的低对比 `subject-footprint`，让遮挡在垫图中实际发生。`literal` 展示字使用真实字体；`reinterpret` 用字符槽与小型字面标签锁定空间，不显示大号普通字体轮廓；资料字使用常规真实字体。
 
 ### `geometry-only`（门控失败时回退）
 
@@ -37,6 +37,8 @@ python3 scripts/typeset_compose.py blank analysis/typeset-spec.json analysis/typ
     {
       "id": "title",
       "role": "display",
+      "glyph_design_mode": "reinterpret",
+      "guide_render": "scaffold",
       "text": "飞檐",
       "font": "/absolute/path/to/authorized-font.ttf",
       "font_index": 0,
@@ -78,6 +80,7 @@ python3 scripts/typeset_compose.py blank analysis/typeset-spec.json analysis/typ
 
 - **字体覆盖**：使用 fontTools 读取所选 font index 的 cmap，逐字验证该层实际文案；缺字直接失败，不把 Pillow 画出的 `.notdef` 豆腐块当成有效字形。
 - **角色显式**：展示层只认 `role: display / display-title / title / structural-title`，不从 layer id 猜测；`subtitle-pinyin` 等 metadata 不会误用展示字 padding。
+- **字形路径显式**：展示层必须声明 `glyph_design_mode: literal / reinterpret`。前者用 `guide_render: text`；后者必须用 `guide_render: scaffold`，避免普通字体像素成为比字形简报更强的锚点。
 - **真实字面**：每层同时记录 `layout_bbox` 与 `ink_bbox`，碰撞和光学对齐使用真实墨迹边界。
 - **对齐组**：默认容差为画布宽度的 `0.25%`。含展示标题的组默认 `basis: ink`；确需 `layout` 时必须填写 `layout_reason`。
 - **竖排顺序**：当前编译器只支持 `vertical_order: top-to-bottom`；竖排未声明或横排误填都会失败。竖排不得加入 baseline 组。
@@ -139,6 +142,6 @@ python3 scripts/typeset_compose.py blank analysis/typeset-spec.json analysis/typ
 - 用 Image 1 的真实主体替换任何中性占位。
 - `subject-footprint` 只锁计划占幅、偏置和遮挡边界；模型必须用 Image 1 的真实建筑替换它并完成抠取、区域材质和共同重光，不能把灰色 polygon 当成成品色块。
 - 文字、主体、背景和材质在同一次 edit 中形成统一物质语言，不在成图上覆盖干净数字字体。
-- `reinterpret` 保留垫图字面范围，但必须离开普通字体轮廓并执行生成前 `glyph-brief.md`；资料字保持 conventional and literal。
+- `reinterpret` 保留垫图字符槽、共同轴与小型字面标签，但必须按生成前 `glyph-brief.md` 重新设计最终轮廓；scaffold 框线和标签不能出现在成图中。资料字保持 conventional and literal。
 
 具体输入顺序和提示词结构以 [image-generation-workflow.md](image-generation-workflow.md) 为唯一真源。

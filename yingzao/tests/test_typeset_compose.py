@@ -92,6 +92,7 @@ class TypesetComposeGateTests(unittest.TestCase):
                 {
                     "id": "display-title",
                     "role": "display",
+                    "glyph_design_mode": "literal",
                     "text": "TEST TITLE",
                     "font": str(available_font()),
                     "size_px": 64,
@@ -183,6 +184,7 @@ class TypesetComposeGateTests(unittest.TestCase):
                 {
                     "id": "display-title",
                     "role": "display",
+                    "glyph_design_mode": "literal",
                     "text": "TITLE",
                     "font": str(available_font()),
                     "size_px": 72,
@@ -269,6 +271,7 @@ class TypesetComposeGateTests(unittest.TestCase):
                 {
                     "id": "display-title",
                     "role": "display",
+                    "glyph_design_mode": "literal",
                     "text": "飞檐",
                     "font": str(latin_only_font()),
                     "size_px": 72,
@@ -293,6 +296,7 @@ class TypesetComposeGateTests(unittest.TestCase):
                 {
                     "id": "display-title",
                     "role": "display",
+                    "glyph_design_mode": "literal",
                     "text": "飞檐",
                     "font": str(chinese_font()),
                     "size_px": 72,
@@ -306,6 +310,60 @@ class TypesetComposeGateTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
         self.assertTrue(report["layers"][0]["font_coverage"]["passed"])
         self.assertFalse(report["layers"][0]["fallback"])
+
+    def test_display_guide_requires_explicit_glyph_mode(self) -> None:
+        spec = {
+            "mode": "typeset-guide",
+            "canvas": [640, 360],
+            "background": "#FFFFFF",
+            "layers": [
+                {
+                    "id": "display-title",
+                    "role": "display",
+                    "text": "TITLE",
+                    "font": str(available_font()),
+                    "size_px": 72,
+                    "x": 80,
+                    "y": 80,
+                }
+            ],
+            "alignment_groups": [],
+        }
+        completed, report = self.run_spec(spec)
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertTrue(any("require glyph_design_mode" in error for error in report["errors"]))
+
+    def test_reinterpret_guide_uses_scaffold_instead_of_stock_silhouette(self) -> None:
+        spec = {
+            "mode": "typeset-guide",
+            "canvas": [640, 360],
+            "background": "#FFFFFF",
+            "layers": [
+                {
+                    "id": "display-title",
+                    "role": "display",
+                    "glyph_design_mode": "reinterpret",
+                    "guide_render": "scaffold",
+                    "text": "飞檐",
+                    "font": str(chinese_font()),
+                    "size_px": 96,
+                    "x": 80,
+                    "y": 80,
+                }
+            ],
+            "alignment_groups": [],
+        }
+        completed, report = self.run_spec(spec)
+        self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+        layer = report["layers"][0]
+        self.assertEqual(layer["glyph_design_mode"], "reinterpret")
+        self.assertEqual(layer["guide_render"], "scaffold")
+
+        stock = deepcopy(spec)
+        stock["layers"][0].pop("guide_render")
+        completed, report = self.run_spec(stock)
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertTrue(any("require guide_render=scaffold" in error for error in report["errors"]))
 
     def test_title_substring_does_not_override_metadata_role(self) -> None:
         spec = {

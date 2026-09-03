@@ -229,6 +229,47 @@ def canvas_size(spec: dict[str, Any]) -> tuple[int, int]:
     return width, height
 
 
+def draw_reinterpret_scaffold(
+    canvas: tuple[int, int],
+    glyphs: list[tuple[str, float, float]],
+    *,
+    x: float,
+    y: float,
+    width: int,
+    line_height: float,
+    orientation: str,
+    font_path: Path,
+    font_index: int,
+    font_size: int,
+) -> Image.Image:
+    """Draw spatial character slots without anchoring the model to a stock display face."""
+    overlay = Image.new("RGBA", canvas, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(overlay)
+    label_size = max(16, round(font_size * 0.22))
+    label_font = ImageFont.truetype(str(font_path), size=label_size, index=font_index)
+    for index, (char, offset_x, offset_y) in enumerate(glyphs):
+        if orientation == "vertical":
+            slot_left = x
+            slot_top = y + offset_y
+            slot_right = x + width
+            slot_bottom = slot_top + line_height
+        else:
+            slot_left = x + offset_x
+            slot_top = y + offset_y
+            next_offset = glyphs[index + 1][1] if index + 1 < len(glyphs) and glyphs[index + 1][2] == offset_y else None
+            slot_right = x + (next_offset if next_offset is not None else width)
+            slot_bottom = slot_top + line_height
+        box = [round(slot_left), round(slot_top), round(slot_right), round(slot_bottom)]
+        draw.rectangle(box, fill=(128, 128, 128, 14), outline=(128, 128, 128, 92), width=2)
+        label_bbox = draw.textbbox((0, 0), char, font=label_font)
+        label_width = label_bbox[2] - label_bbox[0]
+        label_height = label_bbox[3] - label_bbox[1]
+        label_x = slot_left + (slot_right - slot_left - label_width) / 2 - label_bbox[0]
+        label_y = slot_top + (slot_bottom - slot_top - label_height) / 2 - label_bbox[1]
+        draw.text((label_x, label_y), char, font=label_font, fill=(96, 96, 96, 118))
+    return overlay
+
+
 def draw_primitives(
     base: Image.Image, spec: dict[str, Any]
 ) -> tuple[list[dict[str, Any]], list[str], Image.Image]:
@@ -484,6 +525,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     spec = json.loads(args.spec.read_text(encoding="utf-8"))
+    guide_mode = args.art == "blank" or spec.get("mode") == "typeset-guide"
     if args.art == "blank":
         try:
             width, height = canvas_size(spec)
@@ -567,8 +609,8 @@ def main() -> int:
         if z_layer == "behind_subject":
             needs_mask = True
         target = behind if z_layer == "behind_subject" else front
-        item_overlay = Image.new("RGBA", base.size, (0, 0, 0, 0))
-        draw = ImageDraw.Draw(item_overlay)
+        measurement_overlay = Image.new("RGBA", base.size, (0, 0, 0, 0))
+        draw = ImageDraw.Draw(measurement_overlay)
         fill = color_with_opacity(item.get("fill", "#111111"), int(item.get("opacity", 255)))
         stroke_width = int(item.get("stroke_width", 0))
         stroke_fill = color_with_opacity(item.get("stroke_fill", item.get("fill", "#111111")), int(item.get("opacity", 255)))
@@ -586,7 +628,7 @@ def main() -> int:
             max(box[2] for box in glyph_ink_boxes),
             max(box[3] for box in glyph_ink_boxes),
         ]
-        rendered_bbox = item_overlay.getchannel("A").getbbox()
+        rendered_bbox = measurement_overlay.getchannel("A").getbbox()
         if rendered_bbox is None:
             errors.append(f"{layer_id}: rendered alpha is empty")
             continue
@@ -595,6 +637,18 @@ def main() -> int:
         collision_bbox = expand_bbox(ink_bbox, safe_padding)
         role = str(item.get("role", "")).strip()
         display_layer = is_display_layer({"id": layer_id, "role": role})
+        glyph_design_mode = str(item.get("glyph_design_mode", "")).strip().lower()
+        guide_render = str(item.get("guide_render", "text")).strip().lower()
+        if guide_mode and display_layer:
+            if glyph_design_mode not in {"literal", "reinterpret"}:
+                errors.append(f"{layer_id}: display layers require glyph_design_mode=literal or reinterpret")
+            if glyph_design_mode == "reinterpret" and guide_render != "scaffold":
+                errors.append(
+                    f"{layer_id}: reinterpret display layers require guide_render=scaffold "
+                    "so a stock font silhouette cannot become the strongest visual anchor"
+                )
+            if glyph_design_mode == "literal" and guide_render != "text":
+                errors.append(f"{layer_id}: literal display layers require guide_render=text")
         minimum_exclusion_padding = round(font.size * (0.25 if display_layer else 0.5))
         primitive_exclusion_padding = max(
             safe_padding,
@@ -615,7 +669,22 @@ def main() -> int:
                 "allow_overlap": allow_overlap,
             }
         )
-        target.alpha_composite(item_overlay)
+        if guide_mode and display_layer and glyph_design_mode == "reinterpret" and guide_render == "scaffold":
+            guide_overlay = draw_reinterpret_scaffold(
+                base.size,
+                glyphs,
+                x=x,
+                y=y,
+                width=width,
+                line_height=line_height,
+                orientation=orientation,
+                font_path=font_path,
+                font_index=font_index,
+                font_size=font.size,
+            )
+            target.alpha_composite(guide_overlay)
+        else:
+            target.alpha_composite(measurement_overlay)
         if orientation == "horizontal":
             line_count = len(text.splitlines() or [""])
             baseline_ys = [round(y + font.getmetrics()[0] + line_index * line_height, 3) for line_index in range(line_count)]
@@ -628,6 +697,8 @@ def main() -> int:
                 "text": text,
                 "role": role or None,
                 "display_layer": display_layer,
+                "glyph_design_mode": glyph_design_mode or None,
+                "guide_render": guide_render,
                 "font": str(font_path.resolve()),
                 "font_index": font_index,
                 "font_loaded": True,
@@ -658,7 +729,6 @@ def main() -> int:
     if needs_mask and args.subject_mask is None and not has_subject_footprint:
         errors.append("behind_subject layers require --subject-mask or a subject_front subject-footprint primitive")
 
-    guide_mode = args.art == "blank" or spec.get("mode") == "typeset-guide"
     if guide_mode and len(layer_reports) >= 2 and not spec.get("alignment_groups"):
         errors.append("typeset-guide with two or more text layers requires alignment_groups")
 

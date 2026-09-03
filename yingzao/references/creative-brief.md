@@ -65,6 +65,7 @@ Recipe ID / family：__
 字形可见特征：宽窄 __；重心 __；粗细对比 __；收笔 __；字腔 __；节奏 __；表面 __；建筑对应 __
 展示 / 地点对象 / 资料小字的字体角色：__ / __ / __
 glyph brief / typeset spec / guide / report：__ / __ / __ / __
+generation prompt / call manifest / readback：__ / __ / __
 alignment groups / overlap contracts / vertical order：__ / __ / __
 
 统一边缘语言：硬切 / 羽化 / 纸撕 / 墨蚀 / 落影
@@ -86,10 +87,12 @@ z 轴：背景 __ < 结构色形 __ < 主体辅助层 __ < 主体主层 __ < 标
 动作 / 模型：edit / gpt-image-2 或内置 imagegen
 文字路径：typeset-guide-integrated / model-native-minimal-text / geometry-only / layered-final-type
 Image 1：__；Image 2：__；Image 3：__；Image 4..n：__
+Image 2 可见机制（主体 / 背景 / 图文）：__ / __ / __；禁项是否掏空参考：否 / 是，换参考
 Composition diagnosis：__
 Composition repair：__
 身份不变量：1.__ 2.__ 3.__
 必要短文案：__
 灾难性禁项（最多五个）：__
 保存路径：__
+prepare_generation：READY / 未通过 __；call_signature：__
 ```
